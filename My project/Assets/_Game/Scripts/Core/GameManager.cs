@@ -1,5 +1,6 @@
 using System;
 using PawnshopKing.Data.Runtime;
+using PawnshopKing.Systems.SaveLoad;
 using UnityEngine;
 
 namespace PawnshopKing.Core
@@ -51,9 +52,11 @@ namespace PawnshopKing.Core
             if (dayManager == null) dayManager = GetComponentInChildren<DayManager>();
         }
 
-        /// <summary>Creates a fresh campaign starting in debt (GDD 40). Loading a save comes with SaveLoadSystem.</summary>
+        /// <summary>Creates a fresh campaign starting in debt (GDD 40). Single save slot: the old campaign's save is erased.</summary>
         public void StartNewGame()
         {
+            SaveLoadSystem.Delete();
+
             State = new GameState
             {
                 cash = startingCash,
@@ -66,6 +69,21 @@ namespace PawnshopKing.Core
             };
 
             BeginDay();
+        }
+
+        /// <summary>
+        /// Resumes the saved campaign. The autosave marks a completed day, so this
+        /// rolls into the following morning. Returns false when no usable save exists.
+        /// </summary>
+        public bool ContinueFromSave()
+        {
+            var loaded = SaveLoadSystem.Load();
+            if (loaded == null) return false;
+
+            State = loaded;
+            State.currentDay++;
+            BeginDay();
+            return true;
         }
 
         /// <summary>Opens the shop for the current day: DayManager builds the queue.</summary>
@@ -85,9 +103,21 @@ namespace PawnshopKing.Core
         {
             dayManager.EndDay(State);
 
-            if (dayManager.LastDebtResult.gameOver) SetPhase(GamePhase.GameOver);
-            else if (dayManager.LastDebtResult.debtCleared) SetPhase(GamePhase.Victory);  // GDD 27.2
-            else SetPhase(GamePhase.DaySummary);
+            if (dayManager.LastDebtResult.gameOver)
+            {
+                SaveLoadSystem.Delete();  // a finished campaign can't be continued into
+                SetPhase(GamePhase.GameOver);
+            }
+            else if (dayManager.LastDebtResult.debtCleared)
+            {
+                SaveLoadSystem.Delete();
+                SetPhase(GamePhase.Victory);  // GDD 27.2
+            }
+            else
+            {
+                SaveLoadSystem.Save(State);  // autosave: day complete, resolution applied
+                SetPhase(GamePhase.DaySummary);
+            }
         }
 
         /// <summary>Called from the day summary to roll into the next morning.</summary>

@@ -44,8 +44,9 @@ namespace PawnshopKing.Core
             root.AddComponent<UI.InventoryUIManager>();
             root.AddComponent<UI.UpgradeUIManager>();
             root.AddComponent<UI.DaySummaryUIManager>();
+            root.AddComponent<UI.MainMenuUIManager>();
 
-            // Marks the rig DontDestroyOnLoad in Awake, auto-starts the campaign in Start.
+            // Marks the rig DontDestroyOnLoad in Awake, shows the main menu in Start.
             root.AddComponent<GameBootstrap>();
         }
     }
