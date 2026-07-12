@@ -44,14 +44,29 @@ namespace PawnshopKing.Systems.Negotiation
         public static int CalculateAskingPrice(CustomerInstance customer, IReadOnlyList<ItemInstance> items)
         {
             int totalValue = 0;
-            foreach (var item in items) totalValue += item.rolledBaseValue;
+            foreach (var item in items) totalValue += PerceivedValue(customer, item);
             if (totalValue <= 0) return 0;
 
             float factor = Mathf.Clamp(
                 0.5f + 0.45f * customer.greed + 0.2f * (1f - customer.honesty) - 0.3f * customer.desperation,
                 0.35f, 1.2f);
 
-            return Mathf.Max(5, RoundToFive(totalValue * factor));
+            // Asks are quoted in $25 steps so subset re-quotes stay too coarse to
+            // read exact per-item values off the price deltas.
+            return Mathf.Max(5, Mathf.RoundToInt(totalValue * factor / 25f) * 25);
+        }
+
+        /// <summary>
+        /// The seller's idiosyncratic valuation of one piece: true value ±10%, stable
+        /// for the visit (hashed, not rolled) so re-toggling the selection can never
+        /// average the noise away. Keeps subset asks from being an exact linear probe
+        /// of true item values — the inspection loop stays the better appraisal.
+        /// </summary>
+        private static int PerceivedValue(CustomerInstance customer, ItemInstance item)
+        {
+            int hash = (customer.instanceId + item.instanceId).GetHashCode() & 0x7FFFFFFF;
+            float wobble = 0.9f + 0.2f * (hash % 1000 / 999f);
+            return Mathf.RoundToInt(item.rolledBaseValue * wobble);
         }
 
         /// <summary>
@@ -80,7 +95,9 @@ namespace PawnshopKing.Systems.Negotiation
 
             if (offer >= customer.askingPrice)
             {
-                return CloseDeal(state, customer, archetype, selection, offer, OfferOutcome.Accepted);
+                // Close at the ask, never above it — a typo'd extra digit must not
+                // drain the till when the seller would have taken less.
+                return CloseDeal(state, customer, archetype, selection, customer.askingPrice, OfferOutcome.Accepted);
             }
 
             float ratio = offer / (float)customer.askingPrice;

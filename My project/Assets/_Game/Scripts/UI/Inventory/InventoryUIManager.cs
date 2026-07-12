@@ -39,12 +39,19 @@ namespace PawnshopKing.UI
             }
 
             BuildScreen();
+
+            // Day transitions seize/liquidate inventory behind this screen's back —
+            // close on any phase change so stale rows are never left clickable.
+            gm.PhaseChanged += OnPhaseChanged;
         }
 
         private void OnDestroy()
         {
             if (Instance == this) Instance = null;
+            if (gm != null) gm.PhaseChanged -= OnPhaseChanged;
         }
+
+        private void OnPhaseChanged(GamePhase phase) => Close();
 
         public void Toggle()
         {
