@@ -4,13 +4,13 @@ namespace PawnshopKing.Core
 {
     /// <summary>
     /// Entry point for the Bootstrap scene (GDD 37): keeps the manager rig alive
-    /// across scene loads and kicks off a campaign. Sits on the root object that
-    /// also carries GameManager and DayManager.
+    /// across scene loads and hands off to the main menu (Continue / New Game).
+    /// Sits on the root object that also carries GameManager and DayManager.
     /// </summary>
     public class GameBootstrap : MonoBehaviour
     {
-        [Tooltip("Start a new campaign immediately on play — handy until a main menu exists.")]
-        [SerializeField] private bool autoStartNewGame = true;
+        [Tooltip("Skip the main menu and start a fresh campaign immediately — dev shortcut only.")]
+        [SerializeField] private bool skipMenuAndStartNewGame;
 
         private void Awake()
         {
@@ -19,10 +19,13 @@ namespace PawnshopKing.Core
 
         private void Start()
         {
-            if (autoStartNewGame)
+            if (skipMenuAndStartNewGame)
             {
                 GameManager.Instance.StartNewGame();
+                return;
             }
+
+            UI.MainMenuUIManager.Instance.Show();
         }
     }
 }
