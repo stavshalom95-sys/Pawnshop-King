@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e831cfdd0cc42fe8804b7cb33fed4cc, type: 3}
+  m_Name: Customer_Fence
+  m_EditorClassIdentifier:
+  id: fence
+  displayName: Professional Fence
+  patienceRange:
+    min: 0.4
+    max: 0.8
+  desperationRange:
+    min: 0.2
+    max: 0.5
+  honestyRange:
+    min: 0.1
+    max: 0.35
+  greedRange:
+    min: 0.4
+    max: 0.7
+  possibleItemCategories: 000000000100000002000000
+  categoryPreferences:
+  riskProfile:
+    fakeChanceBonus: 0.05
+    stolenChanceBonus: 0.7
+    heatPerDeal: 2
+  dialoguePool:
+  - Don't ask where it came from and I'll make the price nice.
+  - Quick and quiet, that's how I like it.
+  - You move this fast, there's more where it came from.
+  originHints:
+  - They can't tell you a single thing about where it's from.
+  - When you reach for the serial number, they suggest you don't bother.
+  - They want it gone tonight, price be damned.

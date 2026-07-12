@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c34e6f77ecba2f428f637e2ff588a9f, type: 3}
+  m_Name: Item_RareCartridge
+  m_EditorClassIdentifier:
+  id: retro_cartridge_rare
+  displayName: Rare Game Cartridge
+  description: A limited-run cartridge collectors whisper about. Reproduction carts
+    look identical from the outside.
+  brandOrMaker: Pixelmaster
+  era: 1993
+  category: 4
+  baseValueMin: 200
+  baseValueMax: 1200
+  rarityTier: 2
+  fakeChance: 0.2
+  stolenChance: 0.05
+  possibleConditions: 0100000002000000
+  possibleTags: []
+  collectorTags:
+  - retro_gaming
+  repairProfiles: []
+  icon: {fileID: 0}

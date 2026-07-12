@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c34e6f77ecba2f428f637e2ff588a9f, type: 3}
+  m_Name: Item_Smartphone
+  m_EditorClassIdentifier:
+  id: electronics_smartphone
+  displayName: Recent-Model Smartphone
+  description: Nearly new, no box, no charger, price too good. Ask yourself why.
+  brandOrMaker: Nexa
+  era: modern
+  category: 2
+  baseValueMin: 150
+  baseValueMax: 600
+  rarityTier: 0
+  fakeChance: 0.1
+  stolenChance: 0.35
+  possibleConditions: 00000000010000000200000003000000
+  possibleTags: []
+  collectorTags: []
+  repairProfiles: []
+  icon: {fileID: 0}

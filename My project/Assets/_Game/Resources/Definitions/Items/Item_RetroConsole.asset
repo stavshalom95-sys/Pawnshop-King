@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c34e6f77ecba2f428f637e2ff588a9f, type: 3}
+  m_Name: Item_RetroConsole
+  m_EditorClassIdentifier:
+  id: retro_console
+  displayName: Retro Game Console
+  description: A 16-bit classic, yellowed with age. Works, mostly, sometimes.
+  brandOrMaker: Pixelmaster
+  era: 1991
+  category: 4
+  baseValueMin: 100
+  baseValueMax: 450
+  rarityTier: 1
+  fakeChance: 0.05
+  stolenChance: 0.08
+  possibleConditions: 01000000020000000300000004000000
+  possibleTags: []
+  collectorTags:
+  - retro_gaming
+  repairProfiles: []
+  icon: {fileID: 0}

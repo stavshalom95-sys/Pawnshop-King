@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c34e6f77ecba2f428f637e2ff588a9f, type: 3}
+  m_Name: Item_GoldRing
+  m_EditorClassIdentifier:
+  id: jewelry_gold_ring
+  displayName: Gold Ring
+  description: A plain band, stamped 18k. Rings are the easiest thing in the world
+    to fake a stamp on.
+  brandOrMaker:
+  era:
+  category: 1
+  baseValueMin: 80
+  baseValueMax: 350
+  rarityTier: 0
+  fakeChance: 0.35
+  stolenChance: 0.1
+  possibleConditions: 000000000100000002000000
+  possibleTags: []
+  collectorTags:
+  - gold
+  repairProfiles: []
+  icon: {fileID: 0}

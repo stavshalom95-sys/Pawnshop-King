@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c34e6f77ecba2f428f637e2ff588a9f, type: 3}
+  m_Name: Item_VintageDiverWatch
+  m_EditorClassIdentifier:
+  id: watch_vintage_diver
+  displayName: Vintage Diver Watch
+  description: A 1960s diver with a scratched crystal. The movement sounds right,
+    but so do good fakes.
+  brandOrMaker: Meridian
+  era: 1968
+  category: 0
+  baseValueMin: 120
+  baseValueMax: 450
+  rarityTier: 1
+  fakeChance: 0.15
+  stolenChance: 0.05
+  possibleConditions: 010000000200000003000000
+  possibleTags: []
+  collectorTags:
+  - vintage_watches
+  repairProfiles: []
+  icon: {fileID: 0}

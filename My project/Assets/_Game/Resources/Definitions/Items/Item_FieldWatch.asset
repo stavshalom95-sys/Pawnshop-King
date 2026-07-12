@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c34e6f77ecba2f428f637e2ff588a9f, type: 3}
+  m_Name: Item_FieldWatch
+  m_EditorClassIdentifier:
+  id: watch_field
+  displayName: Military Field Watch
+  description: Wartime issue with a worn canvas strap. Collectors pay well for the
+    real thing.
+  brandOrMaker: Corvus
+  era: 1944
+  category: 0
+  baseValueMin: 150
+  baseValueMax: 600
+  rarityTier: 2
+  fakeChance: 0.2
+  stolenChance: 0.04
+  possibleConditions: 0200000003000000
+  possibleTags: []
+  collectorTags:
+  - vintage_watches
+  - militaria
+  repairProfiles: []
+  icon: {fileID: 0}

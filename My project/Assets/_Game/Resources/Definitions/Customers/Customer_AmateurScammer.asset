@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e831cfdd0cc42fe8804b7cb33fed4cc, type: 3}
+  m_Name: Customer_AmateurScammer
+  m_EditorClassIdentifier:
+  id: amateur_scammer
+  displayName: Amateur Scammer
+  patienceRange:
+    min: 0.2
+    max: 0.5
+  desperationRange:
+    min: 0.4
+    max: 0.8
+  honestyRange:
+    min: 0
+    max: 0.25
+  greedRange:
+    min: 0.6
+    max: 0.9
+  possibleItemCategories: 0000000001000000
+  categoryPreferences:
+  riskProfile:
+    fakeChanceBonus: 0.6
+    stolenChanceBonus: 0.1
+    heatPerDeal: 0
+  dialoguePool:
+  - It's one hundred percent genuine, I had the certificate somewhere.
+  - Look, I'm in a hurry, can we do this fast?
+  - A friend of mine sold one just like it for triple.
+  originHints:
+  - They keep insisting it's genuine before you've even asked.
+  - The story about where they got it changes mid-sentence.
+  - They watch your face while you handle it, not the item.

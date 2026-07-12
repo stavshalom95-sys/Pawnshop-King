@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c34e6f77ecba2f428f637e2ff588a9f, type: 3}
+  m_Name: Item_StudioHeadphones
+  m_EditorClassIdentifier:
+  id: electronics_headphones
+  displayName: Studio Headphones
+  description: Pro-grade cans with fresh ear pads. Knockoffs of this model flooded
+    the market last year.
+  brandOrMaker: Kessler Audio
+  era: modern
+  category: 2
+  baseValueMin: 60
+  baseValueMax: 250
+  rarityTier: 0
+  fakeChance: 0.15
+  stolenChance: 0.15
+  possibleConditions: 0100000002000000
+  possibleTags: []
+  collectorTags: []
+  repairProfiles: []
+  icon: {fileID: 0}
