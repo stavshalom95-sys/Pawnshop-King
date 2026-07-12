@@ -57,6 +57,7 @@ namespace PawnshopKing.UI
             feedbackText.text = string.Empty;
             RebuildList();
             screenRoot.SetActive(true);
+            UIFx.FadeIn(this, screenRoot);
         }
 
         public void Close() => screenRoot.SetActive(false);
@@ -77,7 +78,10 @@ namespace PawnshopKing.UI
         {
             var rowGO = new GameObject("InventoryRow", typeof(RectTransform), typeof(Image), typeof(HorizontalLayoutGroup));
             rowGO.transform.SetParent(listContent, false);
-            rowGO.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0.04f);
+            var rowImage = rowGO.GetComponent<Image>();
+            rowImage.color = UITheme.SurfaceRaised;
+            rowImage.sprite = UITheme.RoundedSprite;
+            rowImage.type = Image.Type.Sliced;
 
             var layout = rowGO.GetComponent<HorizontalLayoutGroup>();
             layout.padding = new RectOffset(14, 14, 10, 10);
@@ -111,8 +115,9 @@ namespace PawnshopKing.UI
             else
             {
                 label.text = channel == SellChannel.BlackMarket ? "Raided — closed" : "No collector";
+                label.color = UITheme.DisabledLabel;
                 button.interactable = false;
-                label.transform.parent.GetComponent<Image>().color = new Color(0.35f, 0.33f, 0.30f);
+                label.transform.parent.GetComponent<Image>().color = UITheme.DisabledButton;
             }
         }
 
@@ -169,14 +174,15 @@ namespace PawnshopKing.UI
             scaler.matchWidthOrHeight = 0.5f;
 
             // Leaves the top resource bar visible, so cash changes show live.
-            var root = HUDUIManager.CreatePanel(canvasGO.transform, "InventoryScreen", new Color(0.05f, 0.06f, 0.08f, 0.98f));
+            var root = HUDUIManager.CreatePanel(canvasGO.transform, "InventoryScreen",
+                new Color(UITheme.Background.r, UITheme.Background.g, UITheme.Background.b, 0.98f), rounded: true);
             root.anchorMin = Vector2.zero;
             root.anchorMax = Vector2.one;
             root.offsetMin = new Vector2(60f, 40f);
             root.offsetMax = new Vector2(-60f, -104f);
             screenRoot = root.gameObject;
 
-            titleText = HUDUIManager.CreateText(root, "Title", 30f, TextAlignmentOptions.Left, FontStyles.Bold);
+            titleText = HUDUIManager.CreateText(root, "Title", 30f, TextAlignmentOptions.Left, FontStyles.Bold, header: true);
             var titleRect = (RectTransform)titleText.transform;
             titleRect.anchorMin = new Vector2(0f, 1f);
             titleRect.anchorMax = new Vector2(1f, 1f);
@@ -194,7 +200,7 @@ namespace PawnshopKing.UI
             closeRect.sizeDelta = new Vector2(130f, 48f);
 
             feedbackText = HUDUIManager.CreateText(root, "Feedback", 20f, TextAlignmentOptions.Left, FontStyles.Italic);
-            feedbackText.color = new Color(0.85f, 0.78f, 0.55f);
+            feedbackText.color = UITheme.Gold;
             var feedbackRect = (RectTransform)feedbackText.transform;
             feedbackRect.anchorMin = new Vector2(0f, 1f);
             feedbackRect.anchorMax = new Vector2(1f, 1f);

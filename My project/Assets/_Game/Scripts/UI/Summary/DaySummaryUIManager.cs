@@ -64,8 +64,8 @@ namespace PawnshopKing.UI
             titleText.text = gameOver ? "GAME OVER"
                 : victory ? "CAMPAIGN COMPLETE"
                 : $"Day {s.currentDay} — Closing Time";
-            titleText.color = gameOver ? new Color(0.85f, 0.35f, 0.3f)
-                : victory ? HUDUIManager.ButtonColor
+            titleText.color = gameOver ? UITheme.Danger
+                : victory ? UITheme.Gold
                 : HUDUIManager.TextColor;
 
             var sb = new StringBuilder();
@@ -88,6 +88,7 @@ namespace PawnshopKing.UI
             bodyText.text = sb.ToString();
             continueLabel.text = gameOver || victory ? "New Campaign" : $"Open Day {s.currentDay + 1}";
             screenRoot.SetActive(true);
+            UIFx.FadeIn(this, screenRoot);
         }
 
         /// <summary>The victory ledger (GDD 27.2): the inherited debt is paid — final campaign stats.</summary>
@@ -145,10 +146,11 @@ namespace PawnshopKing.UI
             dim.offsetMin = dim.offsetMax = Vector2.zero;
             screenRoot = dim.gameObject;
 
-            var panel = HUDUIManager.CreatePanel(dim, "SummaryPanel", HUDUIManager.PanelColor);
+            var panel = HUDUIManager.CreatePanel(dim, "SummaryPanel", HUDUIManager.PanelColor, rounded: true);
             panel.anchorMin = panel.anchorMax = new Vector2(0.5f, 0.5f);
             panel.pivot = new Vector2(0.5f, 0.5f);
             panel.sizeDelta = new Vector2(680f, 480f);
+            HUDUIManager.AddPanelShadow(panel);
 
             var layout = panel.gameObject.AddComponent<VerticalLayoutGroup>();
             layout.padding = new RectOffset(40, 40, 32, 32);
@@ -159,7 +161,7 @@ namespace PawnshopKing.UI
             layout.childForceExpandWidth = true;
             layout.childForceExpandHeight = false;
 
-            titleText = HUDUIManager.CreateText(panel, "Title", 34f, TextAlignmentOptions.Left, FontStyles.Bold);
+            titleText = HUDUIManager.CreateText(panel, "Title", 34f, TextAlignmentOptions.Left, FontStyles.Bold, header: true);
             bodyText = HUDUIManager.CreateText(panel, "Body", 24f, TextAlignmentOptions.Left);
 
             var spacer = new GameObject("Spacer", typeof(RectTransform), typeof(LayoutElement));

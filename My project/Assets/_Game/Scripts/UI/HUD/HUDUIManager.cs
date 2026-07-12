@@ -25,15 +25,23 @@ namespace PawnshopKing.UI
     /// </summary>
     public class HUDUIManager : MonoBehaviour
     {
-        // Shared with other code-built screens (InventoryUIManager).
-        internal static readonly Color BarColor = new Color(0.07f, 0.08f, 0.11f, 0.95f);
-        internal static readonly Color PanelColor = new Color(0.10f, 0.11f, 0.15f, 0.95f);
-        internal static readonly Color TextColor = new Color(0.92f, 0.90f, 0.86f);
-        internal static readonly Color MutedColor = new Color(0.62f, 0.60f, 0.56f);
-        internal static readonly Color ButtonColor = new Color(0.83f, 0.62f, 0.15f);
-        internal static readonly Color ButtonTextColor = new Color(0.12f, 0.09f, 0.03f);
+        // Shared with other code-built screens — all values come from the UITheme
+        // noir tokens so a palette change lands everywhere at once.
+        internal static readonly Color BarColor = UITheme.TopBarColor;
+        internal static readonly Color PanelColor = UITheme.Surface;
+        internal static readonly Color TextColor = UITheme.TextPrimary;
+        internal static readonly Color MutedColor = UITheme.TextMuted;
+        internal static readonly Color ButtonColor = UITheme.NeonCyan;
+        internal static readonly Color ButtonTextColor = UITheme.OnNeon;
 
         private GameManager gm;
+
+        // Diagnostics: kept so the first Update can report post-layout rect sizes.
+        private Canvas hudCanvas;
+        private RectTransform topBarRect;
+        private RectTransform customerPanelRect;
+        private RectTransform actionButtonRect;
+        private bool loggedLayoutDiagnostics;
 
         private TextMeshProUGUI dayText;
         private TextMeshProUGUI cashText;
@@ -58,11 +66,12 @@ namespace PawnshopKing.UI
 
         private readonly List<ItemRow> itemRows = new List<ItemRow>();
 
-        /// <summary>One counter row: the item, its info text, and its Inspect button.</summary>
+        /// <summary>One counter row: the item, its select checkbox, info text, and Inspect button.</summary>
         private class ItemRow
         {
             public ItemInstance item;
             public GameObject root;
+            public Toggle selectToggle;
             public TextMeshProUGUI infoText;
             public Button inspectButton;
             public TextMeshProUGUI inspectLabel;
@@ -82,6 +91,7 @@ namespace PawnshopKing.UI
                 return;
             }
 
+            Debug.Log("[HUD] Awake — GameManager found, building HUD.");
             BuildHud();
 
             gm.PhaseChanged += OnPhaseChanged;
@@ -104,6 +114,18 @@ namespace PawnshopKing.UI
         {
             var s = gm.State;
             if (s == null) return;
+
+            // One-shot post-layout diagnostic: by the first Update the canvas has
+            // laid out, so zero-sized or off-screen rects are visible here.
+            if (!loggedLayoutDiagnostics)
+            {
+                loggedLayoutDiagnostics = true;
+                Debug.Log($"[HUD] First Update — canvas pixelRect {hudCanvas.pixelRect.size}, " +
+                          $"TopBar rect {topBarRect.rect.size} at {topBarRect.position}, " +
+                          $"ActionButton rect {actionButtonRect.rect.size} at {actionButtonRect.position} (label '{actionLabel.text}'), " +
+                          $"CustomerPanel rect {customerPanelRect.rect.size} at {customerPanelRect.position}, " +
+                          $"EventSystem: {(EventSystem.current != null ? EventSystem.current.currentInputModule?.GetType().Name ?? "no input module" : "MISSING")}");
+            }
 
             if (s.currentDay == lastDay && s.cash == lastCash && s.reputation == lastReputation
                 && s.heat == lastHeat && s.debt.totalDebt == lastDebt
@@ -140,6 +162,7 @@ namespace PawnshopKing.UI
             dealFeedbackText.text = string.Empty;
             queueText.text = $"{gm.Day.CustomersRemaining} customers in the queue today";
             RefreshActionButton();
+            Debug.Log($"[HUD] Day {day} started — {gm.Day.CustomersRemaining} customers queued, action button shows '{actionLabel.text}'.");
         }
 
         private void OnCustomerArrived(CustomerInstance customer)
@@ -162,6 +185,9 @@ namespace PawnshopKing.UI
                 ? "Last customer of the day"
                 : $"{gm.Day.CustomersRemaining} more waiting outside";
             RefreshActionButton();
+
+            // A new face at the counter eases in rather than snapping.
+            UIFx.FadeIn(this, customerPanelRect.gameObject, 0.4f);
         }
 
         private void OnDayEnded(int day)
@@ -182,6 +208,13 @@ namespace PawnshopKing.UI
         {
             if (!InNegotiation()) return;
 
+            var selection = SelectedItems();
+            if (selection.Count == 0)
+            {
+                dealFeedbackText.text = "Check at least one item to deal on.";
+                return;
+            }
+
             if (!int.TryParse(offerInput.text, out int amount) || amount <= 0)
             {
                 dealFeedbackText.text = "Enter an offer amount first.";
@@ -194,15 +227,15 @@ namespace PawnshopKing.UI
                 return;
             }
 
-            var result = NegotiationSystem.MakeOffer(gm.State, currentCustomer, currentArchetype, amount);
+            var result = NegotiationSystem.MakeOffer(gm.State, currentCustomer, currentArchetype, selection, amount);
             switch (result.outcome)
             {
                 case OfferOutcome.Accepted:
-                    dealFeedbackText.text = $"Deal. You hand over ${result.price:N0}.";
+                    dealFeedbackText.text = $"Deal. You hand over ${result.price:N0}.{LeftoverSuffix()}";
                     ConcludeVisit();
                     break;
                 case OfferOutcome.AcceptedReluctantly:
-                    dealFeedbackText.text = $"“Fine. Just give me the money.” You pay ${result.price:N0}.";
+                    dealFeedbackText.text = $"“Fine. Just give me the money.” You pay ${result.price:N0}.{LeftoverSuffix()}";
                     ConcludeVisit();
                     break;
                 case OfferOutcome.Countered:
@@ -225,14 +258,21 @@ namespace PawnshopKing.UI
         {
             if (!InNegotiation()) return;
 
+            var selection = SelectedItems();
+            if (selection.Count == 0)
+            {
+                dealFeedbackText.text = "Check at least one item to deal on.";
+                return;
+            }
+
             if (currentCustomer.askingPrice > gm.State.cash)
             {
                 dealFeedbackText.text = "You don't have the cash for their price.";
                 return;
             }
 
-            var result = NegotiationSystem.BuyAtAskingPrice(gm.State, currentCustomer, currentArchetype);
-            dealFeedbackText.text = $"Bought at asking price — ${result.price:N0}. Fair dealing. (Reputation +1)";
+            var result = NegotiationSystem.BuyAtAskingPrice(gm.State, currentCustomer, currentArchetype, selection);
+            dealFeedbackText.text = $"Bought at asking price — ${result.price:N0}. Fair dealing. (Reputation +1){LeftoverSuffix()}";
             ConcludeVisit();
         }
 
@@ -248,6 +288,30 @@ namespace PawnshopKing.UI
         private bool InNegotiation() =>
             currentCustomer != null && currentCustomer.negotiationState == NegotiationState.InProgress;
 
+        private List<ItemInstance> SelectedItems()
+        {
+            var selected = new List<ItemInstance>();
+            foreach (var row in itemRows)
+            {
+                if (row.selectToggle.isOn) selected.Add(row.item);
+            }
+
+            return selected;
+        }
+
+        /// <summary>Unchecking an item changes the deal, so the customer re-anchors their ask.</summary>
+        private void OnSelectionChanged()
+        {
+            if (!InNegotiation()) return;
+            NegotiationSystem.RepriceForSelection(currentCustomer, SelectedItems());
+            UpdateMoodAskingLine();
+            RefreshBuyLabel();
+            dealFeedbackText.text = string.Empty;
+        }
+
+        private string LeftoverSuffix() =>
+            currentCustomer.items.Count > 0 ? " They pocket what you passed on." : string.Empty;
+
         private void ConcludeVisit()
         {
             ClearItemRows();
@@ -258,12 +322,14 @@ namespace PawnshopKing.UI
 
         private void UpdateMoodAskingLine()
         {
-            customerMoodText.text = $"Mood: {currentCustomer.mood}     Asking: ${currentCustomer.askingPrice:N0}";
+            string asking = currentCustomer.askingPrice > 0 ? $"${currentCustomer.askingPrice:N0}" : "—";
+            customerMoodText.text = $"Mood: {currentCustomer.mood}     Asking: {asking}";
         }
 
         private void RefreshBuyLabel()
         {
-            if (currentCustomer != null) buyLabel.text = $"Buy  ${currentCustomer.askingPrice:N0}";
+            if (currentCustomer == null) return;
+            buyLabel.text = currentCustomer.askingPrice > 0 ? $"Buy  ${currentCustomer.askingPrice:N0}" : "Buy  —";
         }
 
         // ---- Item rows (counter + inspection, GDD 12) -----------------------
@@ -284,7 +350,10 @@ namespace PawnshopKing.UI
         {
             var rowGO = new GameObject("ItemRow", typeof(RectTransform), typeof(Image), typeof(HorizontalLayoutGroup));
             rowGO.transform.SetParent(itemsContainer, false);
-            rowGO.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0.04f);
+            var rowImage = rowGO.GetComponent<Image>();
+            rowImage.color = UITheme.SurfaceRaised;
+            rowImage.sprite = UITheme.RoundedSprite;
+            rowImage.type = Image.Type.Sliced;
 
             var layout = rowGO.GetComponent<HorizontalLayoutGroup>();
             layout.padding = new RectOffset(14, 14, 10, 10);
@@ -297,6 +366,37 @@ namespace PawnshopKing.UI
 
             var row = new ItemRow { item = item, root = rowGO };
 
+            // Checkbox deciding whether this item is part of the deal (all on by default).
+            var toggleGO = new GameObject("SelectToggle", typeof(RectTransform), typeof(Image), typeof(Toggle));
+            toggleGO.transform.SetParent(rowGO.transform, false);
+            var toggleLayout = toggleGO.AddComponent<LayoutElement>();
+            toggleLayout.preferredWidth = 36f;
+            toggleLayout.preferredHeight = 36f;
+
+            var boxImage = toggleGO.GetComponent<Image>();
+            boxImage.color = UITheme.Surface;
+            boxImage.sprite = UITheme.RoundedSprite;
+            boxImage.type = Image.Type.Sliced;
+
+            var checkGO = new GameObject("Checkmark", typeof(RectTransform), typeof(Image));
+            checkGO.transform.SetParent(toggleGO.transform, false);
+            var checkRect = (RectTransform)checkGO.transform;
+            checkRect.anchorMin = Vector2.zero;
+            checkRect.anchorMax = Vector2.one;
+            checkRect.offsetMin = new Vector2(8f, 8f);
+            checkRect.offsetMax = new Vector2(-8f, -8f);
+            var checkImage = checkGO.GetComponent<Image>();
+            checkImage.color = ButtonColor;
+            checkImage.sprite = UITheme.RoundedSprite;
+            checkImage.type = Image.Type.Sliced;
+            checkImage.raycastTarget = false;
+
+            row.selectToggle = toggleGO.GetComponent<Toggle>();
+            row.selectToggle.targetGraphic = boxImage;
+            row.selectToggle.graphic = checkImage;
+            row.selectToggle.isOn = true;
+            row.selectToggle.onValueChanged.AddListener(_ => OnSelectionChanged());
+
             row.infoText = CreateText(rowGO.transform, "Info", 20f, TextAlignmentOptions.Left);
             row.infoText.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
 
@@ -308,13 +408,16 @@ namespace PawnshopKing.UI
 
             row.inspectImage = buttonGO.GetComponent<Image>();
             row.inspectImage.color = ButtonColor;
+            row.inspectImage.sprite = UITheme.RoundedSprite;
+            row.inspectImage.type = Image.Type.Sliced;
 
             row.inspectButton = buttonGO.GetComponent<Button>();
             row.inspectButton.targetGraphic = row.inspectImage;
             row.inspectButton.onClick.AddListener(() => OnInspectClicked(row));
+            buttonGO.AddComponent<ButtonFX>();
 
             row.inspectLabel = CreateText(buttonGO.transform, "Label", 20f, TextAlignmentOptions.Center, FontStyles.Bold);
-            row.inspectLabel.color = new Color(0.12f, 0.09f, 0.03f);
+            row.inspectLabel.color = ButtonTextColor;
             var labelRect = (RectTransform)row.inspectLabel.transform;
             labelRect.anchorMin = Vector2.zero;
             labelRect.anchorMax = Vector2.one;
@@ -366,7 +469,8 @@ namespace PawnshopKing.UI
             bool canInspect = InspectionSystem.CanInspect(item);
             row.inspectButton.interactable = canInspect;
             row.inspectLabel.text = canInspect ? $"Inspect ({InspectionSystem.InspectionsLeft(item)})" : "Inspected";
-            row.inspectImage.color = canInspect ? ButtonColor : new Color(0.35f, 0.33f, 0.30f);
+            row.inspectImage.color = canInspect ? ButtonColor : UITheme.DisabledButton;
+            row.inspectLabel.color = canInspect ? ButtonTextColor : UITheme.DisabledLabel;
         }
 
         private void OnPhaseChanged(GamePhase phase) => RefreshActionButton();
@@ -416,8 +520,8 @@ namespace PawnshopKing.UI
             var canvasGO = new GameObject("HUDCanvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
             canvasGO.transform.SetParent(transform, false);
 
-            var canvas = canvasGO.GetComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            hudCanvas = canvasGO.GetComponent<Canvas>();
+            hudCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
 
             var scaler = canvasGO.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
@@ -425,13 +529,28 @@ namespace PawnshopKing.UI
             scaler.matchWidthOrHeight = 0.5f;
 
             EnsureEventSystem();
-            BuildTopBar(canvas.transform);
-            BuildGameplayPanel(canvas.transform);
+            BuildTopBar(hudCanvas.transform);
+            Debug.Log("[HUD] Top bar built (5 resource labels).");
+            BuildGameplayPanel(hudCanvas.transform);
+            Debug.Log("[HUD] Gameplay panel built (customer panel, action button, Inventory/Upgrades buttons).");
+
+            // The rig is built before the first scene loads, so don't wait for the
+            // canvas system to schedule a rebuild — lay everything out right now.
+            Canvas.ForceUpdateCanvases();
+            LayoutRebuilder.ForceRebuildLayoutImmediate(topBarRect);
+            LayoutRebuilder.ForceRebuildLayoutImmediate(customerPanelRect);
+            Debug.Log("[HUD] BuildHud complete — forced immediate layout rebuild.");
+
+            UIFx.FadeIn(this, hudCanvas.gameObject);
         }
 
         private void EnsureEventSystem()
         {
-            if (EventSystem.current != null) return;
+            if (EventSystem.current != null)
+            {
+                Debug.Log($"[HUD] EventSystem already present: '{EventSystem.current.gameObject.name}'.");
+                return;
+            }
 
             var esGO = new GameObject("EventSystem", typeof(EventSystem),
 #if ENABLE_INPUT_SYSTEM
@@ -440,11 +559,13 @@ namespace PawnshopKing.UI
                 typeof(StandaloneInputModule));
 #endif
             esGO.transform.SetParent(transform, false);
+            Debug.Log($"[HUD] EventSystem created with {esGO.GetComponent<BaseInputModule>().GetType().Name}.");
         }
 
         private void BuildTopBar(Transform canvas)
         {
             var bar = CreatePanel(canvas, "TopBar", BarColor);
+            topBarRect = bar;
             bar.anchorMin = new Vector2(0f, 1f);
             bar.anchorMax = Vector2.one;
             bar.pivot = new Vector2(0.5f, 1f);
@@ -460,27 +581,33 @@ namespace PawnshopKing.UI
             layout.childForceExpandWidth = true;
             layout.childForceExpandHeight = true;
 
-            dayText = CreateText(bar, "DayText", 26f, TextAlignmentOptions.Left, FontStyles.Bold);
+            dayText = CreateText(bar, "DayText", 26f, TextAlignmentOptions.Left, FontStyles.Bold, header: true);
+            dayText.color = UITheme.NeonCyan;
             cashText = CreateText(bar, "CashText", 24f, TextAlignmentOptions.Left);
+            cashText.color = UITheme.Gold;
             reputationText = CreateText(bar, "ReputationText", 24f, TextAlignmentOptions.Left);
             heatText = CreateText(bar, "HeatText", 24f, TextAlignmentOptions.Left);
+            heatText.color = UITheme.Danger;
             debtText = CreateText(bar, "DebtText", 24f, TextAlignmentOptions.Right);
         }
 
         private void BuildGameplayPanel(Transform canvas)
         {
             // Fills everything under the top bar; the shop screen proper (GDD 32.1 A).
-            var gameplay = CreatePanel(canvas, "GameplayPanel", new Color(0f, 0f, 0f, 0.25f));
+            var gameplay = CreatePanel(canvas, "GameplayPanel", new Color(
+                UITheme.Background.r, UITheme.Background.g, UITheme.Background.b, 0.6f));
             gameplay.anchorMin = Vector2.zero;
             gameplay.anchorMax = Vector2.one;
             gameplay.offsetMin = Vector2.zero;
             gameplay.offsetMax = new Vector2(0f, -64f);
 
-            var panel = CreatePanel(gameplay, "CustomerPanel", PanelColor);
+            var panel = CreatePanel(gameplay, "CustomerPanel", PanelColor, rounded: true);
+            customerPanelRect = panel;
             panel.anchorMin = panel.anchorMax = new Vector2(0.5f, 0.5f);
             panel.pivot = new Vector2(0.5f, 0.5f);
             panel.anchoredPosition = new Vector2(0f, 10f);
             panel.sizeDelta = new Vector2(860f, 640f);
+            AddPanelShadow(panel);
 
             var layout = panel.gameObject.AddComponent<VerticalLayoutGroup>();
             layout.padding = new RectOffset(32, 32, 28, 28);
@@ -491,7 +618,7 @@ namespace PawnshopKing.UI
             layout.childForceExpandWidth = true;
             layout.childForceExpandHeight = false;
 
-            customerNameText = CreateText(panel, "NameText", 34f, TextAlignmentOptions.Left, FontStyles.Bold);
+            customerNameText = CreateText(panel, "NameText", 34f, TextAlignmentOptions.Left, FontStyles.Bold, header: true);
             customerMoodText = CreateText(panel, "MoodText", 22f, TextAlignmentOptions.Left);
             customerDialogueText = CreateText(panel, "DialogueText", 24f, TextAlignmentOptions.Left, FontStyles.Italic);
 
@@ -509,7 +636,7 @@ namespace PawnshopKing.UI
             BuildDealControls(panel);
 
             dealFeedbackText = CreateText(panel, "DealFeedbackText", 20f, TextAlignmentOptions.Left, FontStyles.Italic);
-            dealFeedbackText.color = new Color(0.85f, 0.78f, 0.55f);
+            dealFeedbackText.color = UITheme.Gold;
 
             queueText = CreateText(panel, "QueueText", 18f, TextAlignmentOptions.Left);
             queueText.color = MutedColor;
@@ -541,20 +668,29 @@ namespace PawnshopKing.UI
             buttonGO.transform.SetParent(parent, false);
 
             var rect = (RectTransform)buttonGO.transform;
+            actionButtonRect = rect;
             rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0f);
             rect.pivot = new Vector2(0.5f, 0f);
             rect.anchoredPosition = new Vector2(0f, 36f);
             rect.sizeDelta = new Vector2(300f, 68f);
+            Debug.Log("[HUD] Action button created.");
 
             var image = buttonGO.GetComponent<Image>();
             image.color = ButtonColor;
+            image.sprite = UITheme.RoundedSprite;
+            image.type = Image.Type.Sliced;
+
+            var shadow = buttonGO.AddComponent<Shadow>();
+            shadow.effectColor = UITheme.ShadowTint;
+            shadow.effectDistance = new Vector2(0f, -4f);
 
             var button = buttonGO.GetComponent<Button>();
             button.targetGraphic = image;
             button.onClick.AddListener(OnActionClicked);
+            buttonGO.AddComponent<ButtonFX>();
 
             actionLabel = CreateText(buttonGO.transform, "Label", 26f, TextAlignmentOptions.Center, FontStyles.Bold);
-            actionLabel.color = new Color(0.12f, 0.09f, 0.03f);
+            actionLabel.color = ButtonTextColor;
             var labelRect = (RectTransform)actionLabel.transform;
             labelRect.anchorMin = Vector2.zero;
             labelRect.anchorMax = Vector2.one;
@@ -586,7 +722,10 @@ namespace PawnshopKing.UI
         {
             var go = new GameObject("OfferInput", typeof(RectTransform), typeof(Image));
             go.transform.SetParent(parent, false);
-            go.GetComponent<Image>().color = new Color(0.16f, 0.17f, 0.21f);
+            var inputImage = go.GetComponent<Image>();
+            inputImage.color = UITheme.SurfaceRaised;
+            inputImage.sprite = UITheme.RoundedSprite;
+            inputImage.type = Image.Type.Sliced;
             var layoutElement = go.AddComponent<LayoutElement>();
             layoutElement.preferredWidth = 170f;
             layoutElement.preferredHeight = 46f;
@@ -633,10 +772,17 @@ namespace PawnshopKing.UI
 
             var image = go.GetComponent<Image>();
             image.color = ButtonColor;
+            image.sprite = UITheme.RoundedSprite;
+            image.type = Image.Type.Sliced;
+
+            var shadow = go.AddComponent<Shadow>();
+            shadow.effectColor = UITheme.ShadowTint;
+            shadow.effectDistance = new Vector2(0f, -3f);
 
             var button = go.GetComponent<Button>();
             button.targetGraphic = image;
             button.onClick.AddListener(onClick);
+            go.AddComponent<ButtonFX>();
 
             var text = CreateText(go.transform, "Label", 20f, TextAlignmentOptions.Center, FontStyles.Bold);
             text.text = label;
@@ -649,16 +795,44 @@ namespace PawnshopKing.UI
             return text;
         }
 
-        internal static RectTransform CreatePanel(Transform parent, string name, Color color)
+        internal static RectTransform CreatePanel(Transform parent, string name, Color color, bool rounded = false)
         {
             var go = new GameObject(name, typeof(RectTransform), typeof(Image));
             go.transform.SetParent(parent, false);
-            go.GetComponent<Image>().color = color;
+            var image = go.GetComponent<Image>();
+            image.color = color;
+            if (rounded)
+            {
+                image.sprite = UITheme.RoundedSprite;
+                image.type = Image.Type.Sliced;
+            }
+
             return (RectTransform)go.transform;
         }
 
+        /// <summary>Soft drop shadow behind a fixed-anchor panel: a sibling rendered first, slightly larger and lower.</summary>
+        internal static void AddPanelShadow(RectTransform panel)
+        {
+            var go = new GameObject(panel.name + "Shadow", typeof(RectTransform), typeof(Image));
+            go.transform.SetParent(panel.parent, false);
+            go.transform.SetSiblingIndex(panel.GetSiblingIndex());
+
+            var rect = (RectTransform)go.transform;
+            rect.anchorMin = panel.anchorMin;
+            rect.anchorMax = panel.anchorMax;
+            rect.pivot = panel.pivot;
+            rect.anchoredPosition = panel.anchoredPosition + new Vector2(0f, -8f);
+            rect.sizeDelta = panel.sizeDelta + new Vector2(36f, 36f);
+
+            var image = go.GetComponent<Image>();
+            image.sprite = UITheme.SoftShadowSprite;
+            image.type = Image.Type.Sliced;
+            image.color = UITheme.ShadowTint;
+            image.raycastTarget = false;
+        }
+
         internal static TextMeshProUGUI CreateText(Transform parent, string name, float size,
-            TextAlignmentOptions alignment, FontStyles style = FontStyles.Normal)
+            TextAlignmentOptions alignment, FontStyles style = FontStyles.Normal, bool header = false)
         {
             var go = new GameObject(name, typeof(RectTransform));
             go.transform.SetParent(parent, false);
@@ -669,6 +843,12 @@ namespace PawnshopKing.UI
             text.fontStyle = style;
             text.color = TextColor;
             text.text = string.Empty;
+            if (header && UITheme.HeaderFont != null)
+            {
+                text.font = UITheme.HeaderFont;
+                text.characterSpacing = UITheme.HeaderCharacterSpacing;
+            }
+
             return text;
         }
     }

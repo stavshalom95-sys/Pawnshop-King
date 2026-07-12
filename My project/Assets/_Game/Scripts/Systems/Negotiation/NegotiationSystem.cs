@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using PawnshopKing.Data;
 using PawnshopKing.Data.Definitions;
 using PawnshopKing.Data.Runtime;
@@ -23,8 +24,9 @@ namespace PawnshopKing.Systems.Negotiation
 
     /// <summary>
     /// Handles offer logic, acceptance/counter behavior, and reputation effects
-    /// (GDD 39). Bundle-level for MVP: one asking price covers everything on the
-    /// counter, and closing a deal moves items into inventory and cash out.
+    /// (GDD 39). The asking price covers whichever items the player has on the
+    /// table; closing a deal moves only those into inventory, and the customer
+    /// walks with anything the player passed on.
     /// </summary>
     public static class NegotiationSystem
     {
@@ -35,8 +37,14 @@ namespace PawnshopKing.Systems.Negotiation
         /// </summary>
         public static int CalculateAskingPrice(CustomerInstance customer)
         {
+            return CalculateAskingPrice(customer, customer.items);
+        }
+
+        /// <summary>Asking price for a chosen subset of what the customer carries.</summary>
+        public static int CalculateAskingPrice(CustomerInstance customer, IReadOnlyList<ItemInstance> items)
+        {
             int totalValue = 0;
-            foreach (var item in customer.items) totalValue += item.rolledBaseValue;
+            foreach (var item in items) totalValue += item.rolledBaseValue;
             if (totalValue <= 0) return 0;
 
             float factor = Mathf.Clamp(
@@ -46,23 +54,33 @@ namespace PawnshopKing.Systems.Negotiation
             return Mathf.Max(5, RoundToFive(totalValue * factor));
         }
 
-        /// <summary>Player accepts the customer's current asking price (GDD 13.2).</summary>
-        public static OfferResult BuyAtAskingPrice(GameState state, CustomerInstance customer, CustomerArchetypeDefinition archetype)
+        /// <summary>
+        /// Re-anchors the ask when the player changes which items are on the table.
+        /// A different bundle is a different deal, so counters made against the old
+        /// bundle don't carry over — but patience already spent (offersMade) does.
+        /// </summary>
+        public static void RepriceForSelection(CustomerInstance customer, IReadOnlyList<ItemInstance> selection)
         {
-            return CloseDeal(state, customer, archetype, customer.askingPrice, OfferOutcome.Accepted);
+            customer.askingPrice = CalculateAskingPrice(customer, selection);
+        }
+
+        /// <summary>Player accepts the customer's current asking price (GDD 13.2).</summary>
+        public static OfferResult BuyAtAskingPrice(GameState state, CustomerInstance customer, CustomerArchetypeDefinition archetype, IReadOnlyList<ItemInstance> selection)
+        {
+            return CloseDeal(state, customer, archetype, selection, customer.askingPrice, OfferOutcome.Accepted);
         }
 
         /// <summary>
         /// Resolves one player offer into the GDD 13.5 outcomes: accept, counter,
         /// offended walk-out, desperate capitulation, or fed-up exit.
         /// </summary>
-        public static OfferResult MakeOffer(GameState state, CustomerInstance customer, CustomerArchetypeDefinition archetype, int offer)
+        public static OfferResult MakeOffer(GameState state, CustomerInstance customer, CustomerArchetypeDefinition archetype, IReadOnlyList<ItemInstance> selection, int offer)
         {
             customer.offersMade++;
 
             if (offer >= customer.askingPrice)
             {
-                return CloseDeal(state, customer, archetype, offer, OfferOutcome.Accepted);
+                return CloseDeal(state, customer, archetype, selection, offer, OfferOutcome.Accepted);
             }
 
             float ratio = offer / (float)customer.askingPrice;
@@ -71,7 +89,7 @@ namespace PawnshopKing.Systems.Negotiation
             float settleLine = Mathf.Clamp(0.9f - 0.4f * customer.desperation + 0.25f * customer.greed, 0.5f, 1f);
             if (ratio >= settleLine && Random.value < 0.65f + (ratio - settleLine) * 2f)
             {
-                return CloseDeal(state, customer, archetype, offer, OfferOutcome.Accepted);
+                return CloseDeal(state, customer, archetype, selection, offer, OfferOutcome.Accepted);
             }
 
             // Insultingly low offers can end the conversation (GDD 13.5) and, when
@@ -97,7 +115,7 @@ namespace PawnshopKing.Systems.Negotiation
                 {
                     // "Customer lowers demand if desperate" (GDD 13.5).
                     customer.mood = CustomerMood.Desperate;
-                    return CloseDeal(state, customer, archetype, offer, OfferOutcome.AcceptedReluctantly);
+                    return CloseDeal(state, customer, archetype, selection, offer, OfferOutcome.AcceptedReluctantly);
                 }
 
                 customer.mood = CustomerMood.Impatient;
@@ -108,7 +126,7 @@ namespace PawnshopKing.Systems.Negotiation
             // Too close to split hairs over — take the offer.
             if (customer.askingPrice - offer <= 10)
             {
-                return CloseDeal(state, customer, archetype, offer, OfferOutcome.Accepted);
+                return CloseDeal(state, customer, archetype, selection, offer, OfferOutcome.Accepted);
             }
 
             // Counter between the offer and the current ask; greed pulls it upward.
@@ -126,18 +144,18 @@ namespace PawnshopKing.Systems.Negotiation
             customer.negotiationState = NegotiationState.Rejected;
         }
 
-        private static OfferResult CloseDeal(GameState state, CustomerInstance customer, CustomerArchetypeDefinition archetype, int price, OfferOutcome outcome)
+        private static OfferResult CloseDeal(GameState state, CustomerInstance customer, CustomerArchetypeDefinition archetype, IReadOnlyList<ItemInstance> selection, int price, OfferOutcome outcome)
         {
-            // Split the bundle price across items by value share, so each inventory
-            // entry knows what it effectively cost (GDD 38.2 acquisition price).
+            // Split the deal price across the selected items by value share, so each
+            // inventory entry knows what it effectively cost (GDD 38.2 acquisition price).
             int totalValue = 0;
-            foreach (var item in customer.items) totalValue += item.rolledBaseValue;
+            foreach (var item in selection) totalValue += item.rolledBaseValue;
 
             int remaining = price;
-            for (int i = 0; i < customer.items.Count; i++)
+            for (int i = 0; i < selection.Count; i++)
             {
-                var item = customer.items[i];
-                bool last = i == customer.items.Count - 1;
+                var item = selection[i];
+                bool last = i == selection.Count - 1;
                 int share = last || totalValue <= 0
                     ? remaining
                     : Mathf.RoundToInt(price * (item.rolledBaseValue / (float)totalValue));
@@ -153,7 +171,10 @@ namespace PawnshopKing.Systems.Negotiation
             if (price >= customer.askingPrice) state.reputation += 1; // paid what they asked — fair dealing
 
             customer.negotiationState = NegotiationState.Accepted;
-            customer.items.Clear();
+
+            // Anything the player passed on leaves with the customer.
+            var sold = new HashSet<ItemInstance>(selection);
+            customer.items.RemoveAll(sold.Contains);
 
             return new OfferResult { outcome = outcome, price = price };
         }
