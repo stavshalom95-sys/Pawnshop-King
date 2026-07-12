@@ -37,12 +37,19 @@ namespace PawnshopKing.UI
             }
 
             BuildScreen();
+
+            // Close on day transitions alongside the inventory screen, so no overlay
+            // ever lingers over the next morning's counter.
+            gm.PhaseChanged += OnPhaseChanged;
         }
 
         private void OnDestroy()
         {
             if (Instance == this) Instance = null;
+            if (gm != null) gm.PhaseChanged -= OnPhaseChanged;
         }
+
+        private void OnPhaseChanged(GamePhase phase) => Close();
 
         public void Toggle()
         {

@@ -74,7 +74,13 @@ namespace PawnshopKing.Systems.Market
                 return new SellReceipt { sold = false, message = "No buyer wants this through that channel." };
             }
 
-            state.inventory.Remove(item);
+            // Ownership gate: a stale UI row (item seized overnight, double-fired
+            // click) must never pay out for goods that already left the shelves.
+            if (!state.inventory.Remove(item))
+            {
+                return new SellReceipt { sold = false, message = "That item is no longer on your shelves." };
+            }
+
             state.cash += quote.price;
 
             var definition = ItemGenerator.GetDefinition(item.definitionId);
