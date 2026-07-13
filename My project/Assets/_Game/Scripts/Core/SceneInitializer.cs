@@ -50,6 +50,7 @@ namespace PawnshopKing.Core
             root.AddComponent<UI.DaySummaryUIManager>();
             root.AddComponent<UI.MainMenuUIManager>();
             root.AddComponent<UI.PauseMenuUIManager>();
+            root.AddComponent<UI.AtmosphereOverlay>();
 
             // Marks the rig DontDestroyOnLoad in Awake, shows the main menu in Start.
             root.AddComponent<GameBootstrap>();
