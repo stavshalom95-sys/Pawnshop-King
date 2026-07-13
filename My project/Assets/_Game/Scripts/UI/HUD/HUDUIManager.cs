@@ -98,6 +98,10 @@ namespace PawnshopKing.UI
         // Change-detection cache for the resource bar.
         private int lastDay = int.MinValue, lastCash, lastReputation, lastHeat, lastDebt, lastPayment, lastDebtDays;
 
+        // Juice: the cash label counts toward its new value instead of snapping.
+        private int cashShown = int.MinValue;
+        private Coroutine cashTickRoutine;
+
         private void Awake()
         {
             gm = GameManager.Instance;
@@ -168,12 +172,72 @@ namespace PawnshopKing.UI
             lastDebtDays = s.debt.daysUntilPayment;
 
             dayText.text = $"Day {s.currentDay}";
-            cashText.text = $"Cash  ${s.cash:N0}";
+            UpdateCashLabel(s.cash);
             reputationText.text = $"Rep  {s.reputation}";
             heatText.text = $"Heat  {s.heat}";
             debtText.text = s.debt.totalDebt > 0
                 ? $"Debt  ${s.debt.totalDebt:N0}  (${s.debt.nextPaymentAmount:N0} due in {s.debt.daysUntilPayment}d)"
                 : "Debt  cleared";
+        }
+
+        // ---- Cash tick (juice) ----------------------------------------------
+
+        private void UpdateCashLabel(int target)
+        {
+            if (cashShown == int.MinValue) // first paint: no animation
+            {
+                cashShown = target;
+                cashText.text = $"Cash  ${target:N0}";
+                return;
+            }
+
+            if (target == cashShown && cashTickRoutine == null)
+            {
+                cashText.text = $"Cash  ${target:N0}";
+                return;
+            }
+
+            if (cashTickRoutine != null) StopCoroutine(cashTickRoutine);
+            cashTickRoutine = StartCoroutine(CashTickRoutine(cashShown, target));
+        }
+
+        private IEnumerator CashTickRoutine(int from, int to)
+        {
+            const float duration = 0.4f;
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float t = Mathf.Clamp01(elapsed / duration);
+                cashShown = Mathf.RoundToInt(Mathf.Lerp(from, to, 1f - (1f - t) * (1f - t)));
+                cashText.text = $"Cash  ${cashShown:N0}";
+                yield return null;
+            }
+
+            cashShown = to;
+            cashText.text = $"Cash  ${to:N0}";
+
+            // Settle flash: brighten to the focus gold, then ease home.
+            float flash = 0f;
+            while (flash < 0.25f)
+            {
+                flash += Time.unscaledDeltaTime;
+                cashText.color = Color.Lerp(UITheme.GoldBright, UITheme.Gold, flash / 0.25f);
+                yield return null;
+            }
+
+            cashText.color = UITheme.Gold;
+            cashTickRoutine = null;
+        }
+
+        private void CompleteCashTick()
+        {
+            if (cashTickRoutine == null) return;
+            StopCoroutine(cashTickRoutine);
+            cashTickRoutine = null;
+            cashShown = gm.State.cash;
+            cashText.text = $"Cash  ${cashShown:N0}";
+            cashText.color = UITheme.Gold;
         }
 
         // ---- Event handlers ------------------------------------------------
@@ -268,11 +332,13 @@ namespace PawnshopKing.UI
             {
                 case OfferOutcome.Accepted:
                     Systems.Audio.AudioManager.Instance?.PlayAccept();
+                    UIFx.SpawnMoneyFloater(this, customerPanelRect, -result.price, new Vector2(0f, -190f));
                     dealFeedbackText.text = $"Deal. You hand over ${result.price:N0}.{LeftoverSuffix()}";
                     ConcludeVisit();
                     break;
                 case OfferOutcome.AcceptedReluctantly:
                     Systems.Audio.AudioManager.Instance?.PlayAccept();
+                    UIFx.SpawnMoneyFloater(this, customerPanelRect, -result.price, new Vector2(0f, -190f));
                     dealFeedbackText.text = $"“Fine. Just give me the money.” You pay ${result.price:N0}.{LeftoverSuffix()}";
                     ConcludeVisit();
                     break;
@@ -314,6 +380,7 @@ namespace PawnshopKing.UI
 
             var result = NegotiationSystem.BuyAtAskingPrice(gm.State, currentCustomer, currentArchetype, selection);
             Systems.Audio.AudioManager.Instance?.PlayAccept();
+            UIFx.SpawnMoneyFloater(this, customerPanelRect, -result.price, new Vector2(0f, -190f));
             dealFeedbackText.text = $"Bought at asking price — ${result.price:N0}. Fair dealing. (Reputation +1){LeftoverSuffix()}";
             ConcludeVisit();
         }

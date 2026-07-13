@@ -1,4 +1,5 @@
 using System.Collections;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -87,6 +88,92 @@ namespace PawnshopKing.UI
             }
 
             group.alpha = 1f;
+        }
+
+        /// <summary>Fade + slight scale-in after an unscaled delay — staggered row entrances. Null-safe against destroyed rows.</summary>
+        public static Coroutine FadeInAfter(MonoBehaviour host, CanvasGroup group, float delay)
+        {
+            if (!host.isActiveAndEnabled || group == null) return null;
+            return host.StartCoroutine(FadeInAfterRoutine(group, delay));
+        }
+
+        private static IEnumerator FadeInAfterRoutine(CanvasGroup group, float delay)
+        {
+            float waited = 0f;
+            while (waited < delay)
+            {
+                if (group == null) yield break;
+                group.alpha = 0f;
+                waited += Time.unscaledDeltaTime;
+                yield return null;
+            }
+
+            float elapsed = 0f;
+            while (elapsed < UITheme.FadeDuration)
+            {
+                if (group == null) yield break;
+                elapsed += Time.unscaledDeltaTime;
+                float t = Mathf.Clamp01(elapsed / UITheme.FadeDuration);
+                group.alpha = 1f - (1f - t) * (1f - t);
+                group.transform.localScale = Vector3.one * Mathf.Lerp(0.97f, 1f, t);
+                yield return null;
+            }
+
+            group.alpha = 1f;
+            group.transform.localScale = Vector3.one;
+        }
+
+        /// <summary>One check for "the player clicked to skip juice", on either input backend.</summary>
+        public static bool SkipClickPressed()
+        {
+#if ENABLE_INPUT_SYSTEM
+            return UnityEngine.InputSystem.Mouse.current != null
+                && UnityEngine.InputSystem.Mouse.current.leftButton.wasPressedThisFrame;
+#else
+            return Input.GetMouseButtonDown(0);
+#endif
+        }
+
+        /// <summary>Floating +$/−$ label that drifts up and fades out — money made physical.</summary>
+        public static void SpawnMoneyFloater(MonoBehaviour host, RectTransform parent, int amount, Vector2 anchoredPosition)
+        {
+            if (!host.isActiveAndEnabled || parent == null) return;
+
+            var go = new GameObject("MoneyFloater", typeof(RectTransform), typeof(CanvasGroup));
+            go.transform.SetParent(parent, false);
+            var rect = (RectTransform)go.transform;
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = anchoredPosition;
+            rect.sizeDelta = new Vector2(260f, 44f);
+
+            var label = go.AddComponent<TextMeshProUGUI>();
+            label.fontSize = 27f;
+            label.fontStyle = FontStyles.Bold;
+            label.alignment = TextAlignmentOptions.Center;
+            label.raycastTarget = false;
+            label.text = (amount >= 0 ? "+$" : "-$") + Mathf.Abs(amount).ToString("N0");
+            label.color = amount >= 0 ? UITheme.Success : UITheme.Danger;
+
+            host.StartCoroutine(FloaterRoutine(go, rect, go.GetComponent<CanvasGroup>()));
+        }
+
+        private static IEnumerator FloaterRoutine(GameObject go, RectTransform rect, CanvasGroup group)
+        {
+            const float duration = 0.9f;
+            float startY = rect.anchoredPosition.y;
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                if (rect == null) yield break;
+                elapsed += Time.unscaledDeltaTime;
+                float t = Mathf.Clamp01(elapsed / duration);
+                float ease = 1f - (1f - t) * (1f - t);
+                rect.anchoredPosition = new Vector2(rect.anchoredPosition.x, startY + 70f * ease);
+                group.alpha = t < 0.4f ? 1f : 1f - (t - 0.4f) / 0.6f;
+                yield return null;
+            }
+
+            Object.Destroy(go);
         }
     }
 }
