@@ -21,6 +21,7 @@ namespace PawnshopKing.UI
         public static readonly Color NeonCyan = Hex(0x41E8D8);       // interactive elements
         public static readonly Color OnNeon = Hex(0x06131A);         // text on neon surfaces
         public static readonly Color Gold = Hex(0xE8B54D);           // cash and value figures
+        public static readonly Color GoldBright = Hex(0xF5D07A);     // focus-pulse peak on armed controls
         public static readonly Color Danger = Hex(0xE5484D);         // heat, raids, game over
         public static readonly Color Success = Hex(0x5BC777);
         public static readonly Color DisabledButton = Hex(0x2A3040);
@@ -32,6 +33,7 @@ namespace PawnshopKing.UI
         public const float HoverDuration = 0.12f;
         public const float HoverScale = 1.03f;
         public const float PressScale = 0.96f;
+        public const float FocusPulsePeriod = 1.1f;                  // seconds per armed-state pulse
 
         // ---- Typography ----
         public const float HeaderCharacterSpacing = 5f;
