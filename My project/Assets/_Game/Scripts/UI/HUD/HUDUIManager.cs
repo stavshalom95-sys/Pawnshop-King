@@ -102,6 +102,11 @@ namespace PawnshopKing.UI
         private int cashShown = int.MinValue;
         private Coroutine cashTickRoutine;
 
+        // Juice: dialogue types out, item rows enter staggered — one click skips all.
+        private Coroutine dialogueRoutine;
+        private readonly List<CanvasGroup> pendingRowFades = new List<CanvasGroup>();
+        private readonly List<Coroutine> rowFadeRoutines = new List<Coroutine>();
+
         private void Awake()
         {
             gm = GameManager.Instance;
@@ -146,6 +151,9 @@ namespace PawnshopKing.UI
         {
             var s = gm.State;
             if (s == null) return;
+
+            // Any click fast-forwards running juice — gameplay never waits on polish.
+            if (JuiceActive && UIFx.SkipClickPressed()) SkipJuice();
 
             // One-shot post-layout diagnostic: by the first Update the canvas has
             // laid out, so zero-sized or off-screen rects are visible here.
@@ -240,6 +248,82 @@ namespace PawnshopKing.UI
             cashText.color = UITheme.Gold;
         }
 
+        // ---- Juice skip (dialogue, row entrances, cash tick) -----------------
+
+        private bool JuiceActive =>
+            dialogueRoutine != null || cashTickRoutine != null || pendingRowFades.Count > 0;
+
+        private void SkipJuice()
+        {
+            if (dialogueRoutine != null)
+            {
+                StopCoroutine(dialogueRoutine);
+                dialogueRoutine = null;
+                customerDialogueText.maxVisibleCharacters = int.MaxValue;
+            }
+
+            foreach (var routine in rowFadeRoutines)
+            {
+                if (routine != null) StopCoroutine(routine);
+            }
+
+            rowFadeRoutines.Clear();
+            foreach (var group in pendingRowFades)
+            {
+                if (group == null) continue;
+                group.alpha = 1f;
+                group.transform.localScale = Vector3.one;
+            }
+
+            pendingRowFades.Clear();
+            CompleteCashTick();
+        }
+
+        private void SetDialogueInstant(string text)
+        {
+            if (dialogueRoutine != null)
+            {
+                StopCoroutine(dialogueRoutine);
+                dialogueRoutine = null;
+            }
+
+            customerDialogueText.maxVisibleCharacters = int.MaxValue;
+            customerDialogueText.text = text;
+        }
+
+        private void StartDialogueTypewriter(string line)
+        {
+            if (dialogueRoutine != null) StopCoroutine(dialogueRoutine);
+            customerDialogueText.text = line;
+            customerDialogueText.maxVisibleCharacters = 0;
+            dialogueRoutine = StartCoroutine(DialogueRoutine());
+        }
+
+        private IEnumerator DialogueRoutine()
+        {
+            const float charsPerSecond = 35f;
+            customerDialogueText.ForceMeshUpdate();
+            int total = customerDialogueText.textInfo.characterCount;
+
+            float elapsed = 0f;
+            int shown = 0;
+            while (shown < total)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                int target = Mathf.Min(total, Mathf.FloorToInt(elapsed * charsPerSecond));
+                if (target != shown)
+                {
+                    shown = target;
+                    customerDialogueText.maxVisibleCharacters = shown;
+                }
+
+                yield return null;
+            }
+
+            customerDialogueText.maxVisibleCharacters = int.MaxValue;
+            dialogueRoutine = null;
+        }
+
         // ---- Event handlers ------------------------------------------------
 
         private void OnDayStarted(int day)
@@ -248,7 +332,7 @@ namespace PawnshopKing.UI
             currentArchetype = null;
             customerNameText.text = "Shop is open";
             customerMoodText.text = string.Empty;
-            customerDialogueText.text = "Waiting for the first customer...";
+            SetDialogueInstant("Waiting for the first customer...");
             DisarmOffer();
             ClearItemRows();
             dealControls.SetActive(false);
@@ -265,7 +349,7 @@ namespace PawnshopKing.UI
             currentArchetype = gm.Day.GetArchetype(customer.archetypeId);
 
             customerNameText.text = currentArchetype != null ? currentArchetype.displayName : customer.archetypeId;
-            customerDialogueText.text = $"“{PickDialogueLine(currentArchetype)}”";
+            StartDialogueTypewriter($"“{PickDialogueLine(currentArchetype)}”");
             UpdateMoodAskingLine();
             RebuildItemRows(customer);
 
@@ -290,7 +374,7 @@ namespace PawnshopKing.UI
         {
             customerNameText.text = "Shop closed";
             customerMoodText.text = string.Empty;
-            customerDialogueText.text = $"Day {day} is over. The debt clock ticks on.";
+            SetDialogueInstant($"Day {day} is over. The debt clock ticks on.");
             DisarmOffer();
             ClearItemRows();
             dealControls.SetActive(false);
@@ -586,11 +670,30 @@ namespace PawnshopKing.UI
         private void RebuildItemRows(CustomerInstance customer)
         {
             ClearItemRows();
-            foreach (var item in customer.items) CreateItemRow(item);
+            for (int i = 0; i < customer.items.Count; i++)
+            {
+                CreateItemRow(customer.items[i]);
+
+                // Staggered entrance: the customer places items on the counter
+                // one at a time. Skippable with the rest of the juice.
+                var group = itemRows[itemRows.Count - 1].root.AddComponent<CanvasGroup>();
+                group.alpha = 0f;
+                pendingRowFades.Add(group);
+                var routine = UIFx.FadeInAfter(this, group, 0.08f + i * 0.07f);
+                if (routine != null) rowFadeRoutines.Add(routine);
+            }
         }
 
         private void ClearItemRows()
         {
+            foreach (var routine in rowFadeRoutines)
+            {
+                if (routine != null) StopCoroutine(routine);
+            }
+
+            rowFadeRoutines.Clear();
+            pendingRowFades.Clear();
+
             foreach (var row in itemRows) Destroy(row.root);
             itemRows.Clear();
         }
