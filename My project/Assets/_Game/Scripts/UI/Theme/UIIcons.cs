@@ -7,18 +7,27 @@ using UnityEngine.UI;
 namespace PawnshopKing.UI
 {
     /// <summary>
-    /// Procedural category glyphs for item rows (zero-editor-wiring: drawn into
-    /// textures at runtime, no sprite assets). Each ItemCategory gets a simple
-    /// shape and a neon accent so items are recognizable at a glance without
-    /// reading their names. An ItemDefinition's authored icon, when present,
-    /// overrides the category glyph.
+    /// Item icons for the counter and inventory rows. Resolution order:
+    /// the definition's authored sprite, then a PNG dropped in
+    /// Resources/ItemIcons named after the item ("Military Field Watch.png"),
+    /// then one named after the category ("Watches.png"), and finally the
+    /// built-in procedural category glyph — so art lands file by file with no
+    /// code or asset wiring. Real images render untinted in a larger chip;
+    /// glyphs stay neon-tinted.
     /// </summary>
     public static class UIIcons
     {
+        /// <summary>Drop folder for item art, relative to any Resources folder.</summary>
+        public const string IconsResourcePath = "ItemIcons";
+
+        private const float GlyphChipSize = 48f;
+        private const float PhotoChipSize = 56f;
+
         private const int TextureSize = 64;
         private const int Supersamples = 3;
 
         private static readonly Dictionary<ItemCategory, Sprite> Cache = new Dictionary<ItemCategory, Sprite>();
+        private static readonly Dictionary<string, Sprite> PhotoCache = new Dictionary<string, Sprite>();
 
         private static readonly Vector2[] Star = BuildStarPolygon(new Vector2(0.5f, 0.52f), 0.36f, 0.15f);
         private static readonly Vector2[] Gem =
@@ -69,12 +78,17 @@ namespace PawnshopKing.UI
         }
 
         /// <summary>
-        /// Standard item-row icon: a dark rounded chip holding the glyph. Uses the
-        /// definition's authored icon when one exists, else the tinted category glyph.
-        /// A null definition falls back to a muted tools glyph rather than nothing.
+        /// Standard item-row icon: a dark rounded chip holding the item's image.
+        /// Real art (authored or from Resources/ItemIcons) renders untinted and a
+        /// touch larger; the procedural glyph fallback stays neon-tinted. A null
+        /// definition falls back to a muted tools glyph rather than nothing.
         /// </summary>
-        public static void CreateIconChip(Transform parent, ItemDefinition definition, float size = 48f)
+        public static void CreateIconChip(Transform parent, ItemDefinition definition)
         {
+            var photo = ResolvePhoto(definition);
+            float size = photo != null ? PhotoChipSize : GlyphChipSize;
+            float inset = photo != null ? 3f : 5f;
+
             var chipGO = new GameObject("ItemIcon", typeof(RectTransform), typeof(Image));
             chipGO.transform.SetParent(parent, false);
             var layoutElement = chipGO.AddComponent<LayoutElement>();
@@ -92,17 +106,17 @@ namespace PawnshopKing.UI
             var glyphRect = (RectTransform)glyphGO.transform;
             glyphRect.anchorMin = Vector2.zero;
             glyphRect.anchorMax = Vector2.one;
-            glyphRect.offsetMin = new Vector2(5f, 5f);
-            glyphRect.offsetMax = new Vector2(-5f, -5f);
+            glyphRect.offsetMin = new Vector2(inset, inset);
+            glyphRect.offsetMax = new Vector2(-inset, -inset);
 
             var glyph = glyphGO.GetComponent<Image>();
             glyph.raycastTarget = false;
             glyph.preserveAspect = true;
 
-            if (definition != null && definition.icon != null)
+            if (photo != null)
             {
-                glyph.sprite = definition.icon;
-                glyph.color = Color.white;
+                glyph.sprite = photo;
+                glyph.color = Color.white; // real art keeps its own colors
             }
             else
             {
@@ -110,6 +124,33 @@ namespace PawnshopKing.UI
                 glyph.sprite = CategoryIcon(category);
                 glyph.color = definition != null ? CategoryColor(category) : UITheme.TextMuted;
             }
+        }
+
+        /// <summary>Authored sprite first, then item-name PNG, then category PNG; null means "use the glyph".</summary>
+        private static Sprite ResolvePhoto(ItemDefinition definition)
+        {
+            if (definition == null) return null;
+            if (definition.icon != null) return definition.icon;
+
+            var sprite = LoadPhoto(definition.displayName);
+            if (sprite == null) sprite = LoadPhoto(definition.category.ToString());
+            return sprite;
+        }
+
+        private static Sprite LoadPhoto(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return null;
+
+#if UNITY_EDITOR
+            // No caching in the editor: a PNG dropped into the folder mid-session
+            // shows up on the next row rebuild instead of after a domain reload.
+            return Resources.Load<Sprite>(IconsResourcePath + "/" + name);
+#else
+            if (PhotoCache.TryGetValue(name, out var cached)) return cached;
+            var sprite = Resources.Load<Sprite>(IconsResourcePath + "/" + name);
+            PhotoCache[name] = sprite; // misses cached too — a build's resources are fixed
+            return sprite;
+#endif
         }
 
         // ---- Rasterization ---------------------------------------------------
