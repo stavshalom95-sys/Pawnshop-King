@@ -66,6 +66,54 @@ namespace PawnshopKing.UI
             }
         }
 
+        private static TMP_FontAsset rtlBodyFont;
+
+        /// <summary>
+        /// Dynamic OS font with Hebrew coverage for the onboarding tips — the TMP
+        /// default atlas is Latin-only and would render tofu. Glyphs populate on
+        /// demand, so no pre-baked atlas asset is needed (zero-editor-wiring).
+        /// </summary>
+        public static TMP_FontAsset RtlBodyFont
+        {
+            get
+            {
+                if (rtlBodyFont != null) return rtlBodyFont;
+
+                foreach (var name in new[] { "Segoe UI", "Arial", "Tahoma" })
+                {
+                    var osFont = Font.CreateDynamicFontFromOSFont(name, 32);
+                    if (osFont == null) continue;
+
+                    rtlBodyFont = TMP_FontAsset.CreateFontAsset(osFont);
+                    if (rtlBodyFont != null) return rtlBodyFont;
+                }
+
+                rtlBodyFont = TMP_Settings.defaultFontAsset;
+                return rtlBodyFont;
+            }
+        }
+
+        /// <summary>
+        /// Prepares mixed Hebrew/Latin text for TMP's isRightToLeftText rendering:
+        /// TMP reverses the whole string, which corrects logical-order Hebrew but
+        /// mirrors embedded Latin ("Inspect" → "tcepsnI"). Pre-reversing each Latin
+        /// run — a whole phrase including its internal spaces, so "Next Customer"
+        /// keeps its word order — makes it come out forward again. Not a full bidi
+        /// engine — enough for one-line tips without nesting or numerals-in-Hebrew.
+        /// </summary>
+        public static string PrepareRtl(string text)
+        {
+            return System.Text.RegularExpressions.Regex.Replace(
+                text,
+                "[A-Za-z0-9][A-Za-z0-9 ]*[A-Za-z0-9]|[A-Za-z0-9]",
+                match =>
+                {
+                    var chars = match.Value.ToCharArray();
+                    System.Array.Reverse(chars);
+                    return new string(chars);
+                });
+        }
+
         // ---- Procedural sprites (rounded corners, soft shadows) ----
 
         private static Sprite roundedSprite;

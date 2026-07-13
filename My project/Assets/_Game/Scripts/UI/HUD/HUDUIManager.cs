@@ -70,6 +70,13 @@ namespace PawnshopKing.UI
         private bool offerArmed;
         private int offerArmedFrame;
 
+        // Onboarding tips (Hebrew, RTL): one context-sensitive line under the
+        // counter, toggleable via the "?" button and persisted in PlayerPrefs.
+        private const string TipsEnabledKey = "tips_enabled";
+        private Image tipBackground;
+        private TextMeshProUGUI tipText;
+        private bool tipsEnabled;
+
         private CustomerInstance currentCustomer;
         private CustomerArchetypeDefinition currentArchetype;
 
@@ -172,6 +179,7 @@ namespace PawnshopKing.UI
             dealFeedbackText.text = string.Empty;
             queueText.text = $"{gm.Day.CustomersRemaining} customers in the queue today";
             RefreshActionButton();
+            UpdateTip();
             Debug.Log($"[HUD] Day {day} started — {gm.Day.CustomersRemaining} customers queued, action button shows '{actionLabel.text}'.");
         }
 
@@ -196,6 +204,7 @@ namespace PawnshopKing.UI
                 ? "Last customer of the day"
                 : $"{gm.Day.CustomersRemaining} more waiting outside";
             RefreshActionButton();
+            UpdateTip();
 
             // A new face at the counter eases in rather than snapping.
             UIFx.FadeIn(this, customerPanelRect.gameObject, 0.4f);
@@ -257,6 +266,7 @@ namespace PawnshopKing.UI
                     dealFeedbackText.text = $"“Make it ${result.price:N0} and we're done.”";
                     UpdateMoodAskingLine();
                     RefreshBuyLabel();
+                    UpdateTip();
                     break;
                 case OfferOutcome.OffendedLeft:
                     dealFeedbackText.text = "“Insulting.” They storm out. Word gets around. (Reputation -1)";
@@ -370,6 +380,89 @@ namespace PawnshopKing.UI
             }
         }
 
+        // ---- Onboarding tips (GDD 33 onboarding, Hebrew RTL) ------------------
+
+        private void BuildTipBubble(RectTransform panel)
+        {
+            tipsEnabled = PlayerPrefs.GetInt(TipsEnabledKey, 1) == 1;
+
+            var rowGO = new GameObject("TipBubble", typeof(RectTransform), typeof(Image), typeof(HorizontalLayoutGroup));
+            rowGO.transform.SetParent(panel, false);
+            tipBackground = rowGO.GetComponent<Image>();
+            tipBackground.sprite = UITheme.RoundedSprite;
+            tipBackground.type = Image.Type.Sliced;
+            tipBackground.raycastTarget = false;
+
+            var layout = rowGO.GetComponent<HorizontalLayoutGroup>();
+            layout.padding = new RectOffset(12, 12, 8, 8);
+            layout.spacing = 10f;
+            layout.childAlignment = TextAnchor.MiddleLeft;
+            layout.childControlWidth = true;
+            layout.childControlHeight = true;
+            layout.childForceExpandWidth = false;
+            layout.childForceExpandHeight = false;
+
+            // "?" first (leftmost), so the Hebrew text reads from the right edge.
+            var toggleLabel = CreateSmallButton(rowGO.transform, "?", 40f, OnTipToggleClicked);
+            toggleLabel.transform.parent.GetComponent<LayoutElement>().preferredHeight = 36f;
+
+            tipText = CreateText(rowGO.transform, "TipText", 19f, TextAlignmentOptions.Right);
+            tipText.font = UITheme.RtlBodyFont;
+            tipText.isRightToLeftText = true;
+            tipText.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
+
+            UpdateTip();
+        }
+
+        private void OnTipToggleClicked()
+        {
+            tipsEnabled = !tipsEnabled;
+            PlayerPrefs.SetInt(TipsEnabledKey, tipsEnabled ? 1 : 0);
+            UpdateTip();
+        }
+
+        /// <summary>Re-picks the tip for the current moment; hides the bubble when tips are off.</summary>
+        private void UpdateTip()
+        {
+            if (tipText == null) return;
+
+            if (!tipsEnabled)
+            {
+                tipText.text = string.Empty;
+                tipBackground.color = Color.clear;
+                return;
+            }
+
+            tipBackground.color = UITheme.SurfaceRaised;
+            tipText.text = UITheme.PrepareRtl(ChooseTip());
+        }
+
+        /// <summary>One sentence for where the player actually is, not a manual.</summary>
+        private string ChooseTip()
+        {
+            if (!InNegotiation())
+            {
+                return gm.Day != null && gm.Day.CustomersRemaining > 0
+                    ? "לחץ על Next Customer כדי לקרוא ללקוח הבא"
+                    : "לחץ על Close Shop כדי לסגור את היום";
+            }
+
+            foreach (var row in itemRows)
+            {
+                if (row.item.timesInspected == 0)
+                {
+                    return "לחץ על Inspect כדי לבדוק את החפץ לפני שקונים";
+                }
+            }
+
+            if (currentCustomer.offersMade == 0)
+            {
+                return "הצע פחות מהמחיר המבוקש — מיקוח הוא כל הרווח";
+            }
+
+            return "אפשר להתמקח שוב, לקנות עם Buy או לסרב עם Reject";
+        }
+
         /// <summary>Focus left the amount field: clicking away cancels the armed state.</summary>
         private void OnOfferInputEndEdit()
         {
@@ -393,6 +486,7 @@ namespace PawnshopKing.UI
             dealControls.SetActive(false);
             customerMoodText.text = $"Mood: {currentCustomer.mood}";
             RefreshActionButton();
+            UpdateTip();
         }
 
         private void UpdateMoodAskingLine()
@@ -509,6 +603,7 @@ namespace PawnshopKing.UI
         {
             InspectionSystem.Inspect(gm.State, row.item, currentArchetype);
             RefreshItemRow(row);
+            UpdateTip();
         }
 
         /// <summary>
@@ -718,6 +813,8 @@ namespace PawnshopKing.UI
 
             queueText = CreateText(panel, "QueueText", 18f, TextAlignmentOptions.Left);
             queueText.color = MutedColor;
+
+            BuildTipBubble(panel);
 
             BuildActionButton(gameplay);
 
