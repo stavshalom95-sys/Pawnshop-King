@@ -37,6 +37,8 @@ that deviates: note it, keep going, report the batch.
 - [ ] Esc does nothing while the main menu is showing.
 - [ ] Master slider mutes/dims everything live; SFX slider changes click volume; Music slider changes music volume live.
 - [ ] **Music toggle Off stops music immediately; On resumes; state survives relaunch** (regression check for the fixed stale-instance bug).
+- [ ] **Music toggle Off silences even with the Music slider at 100%** (mute must override the slider, not depend on it).
+- [ ] **Switch language while Settings is open**: all rows stay inside the panel — no clipping, overlap, or sliding off-screen; still correct after closing and reopening pause (regression check for the childControlHeight layout fix).
 - [ ] Difficulty toggles Easy/Hard, persists in the save (relaunch → same setting), and Easy noticeably lowers asks on the next customers.
 - [ ] Quit to Main Menu: timescale restored (customer panel animations run), Continue resumes last completed day.
 - [ ] While paused: game visuals frozen but menu buttons animate and click.

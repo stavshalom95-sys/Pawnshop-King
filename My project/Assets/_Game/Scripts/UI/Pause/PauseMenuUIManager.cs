@@ -29,6 +29,8 @@ namespace PawnshopKing.UI
         private GameObject screenRoot;
         private GameObject mainView;
         private GameObject settingsView;
+        private RectTransform mainContent;
+        private RectTransform settingsContent;
         private TextMeshProUGUI musicToggleLabel;
         private TextMeshProUGUI difficultyLabel;
 
@@ -68,6 +70,15 @@ namespace PawnshopKing.UI
             Loc.Set(difficultyLabel, Loc.T(difficulty == Difficulty.Easy
                 ? LanguageManager.Keys.DifficultyEasy
                 : LanguageManager.Keys.DifficultyHard));
+
+            // Localized labels just rewrote their text (this runs after them —
+            // subscribed later); relayout both views now so nothing clips or
+            // drifts while the menu is open.
+            if (screenRoot != null && screenRoot.activeSelf)
+            {
+                LayoutRebuilder.ForceRebuildLayoutImmediate(mainContent);
+                LayoutRebuilder.ForceRebuildLayoutImmediate(settingsContent);
+            }
         }
 
         private void Update()
@@ -145,10 +156,10 @@ namespace PawnshopKing.UI
             dim.offsetMin = dim.offsetMax = Vector2.zero;
             screenRoot = dim.gameObject;
 
-            mainView = BuildView(dim, "MainView", new Vector2(520f, 480f), out var mainContent);
+            mainView = BuildView(dim, "MainView", new Vector2(520f, 480f), out mainContent);
             BuildMainView(mainContent);
 
-            settingsView = BuildView(dim, "SettingsView", new Vector2(620f, 620f), out var settingsContent);
+            settingsView = BuildView(dim, "SettingsView", new Vector2(620f, 620f), out settingsContent);
             BuildSettingsView(settingsContent);
 
             screenRoot.SetActive(false);
@@ -175,7 +186,10 @@ namespace PawnshopKing.UI
             layout.spacing = 16f;
             layout.childAlignment = TextAnchor.UpperCenter;
             layout.childControlWidth = true;
-            layout.childControlHeight = false;
+            // Control heights so LayoutElement.preferredHeight actually drives the
+            // stack — with this false, rows position by raw rect sizes and drift
+            // off-panel when localized text dirties them.
+            layout.childControlHeight = true;
             layout.childForceExpandWidth = true;
             layout.childForceExpandHeight = false;
 
