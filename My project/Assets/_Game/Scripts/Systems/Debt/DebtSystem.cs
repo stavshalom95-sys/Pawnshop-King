@@ -14,7 +14,13 @@ namespace PawnshopKing.Systems.Debt
         public int itemsSeized;
         public bool debtCleared;
         public bool gameOver;
-        /// <summary>Human-readable summary line for the day summary screen.</summary>
+        /// <summary>Ran out of cash AND inventory with debt still owed — no way forward.</summary>
+        public bool bankrupt;
+        /// <summary>What tonight's payment demanded (when one was due).</summary>
+        public int amountDue;
+        /// <summary>What was actually paid (when a payment went through).</summary>
+        public int amountPaid;
+        /// <summary>Human-readable summary line (English; the UI composes localized text from the fields above).</summary>
         public string message;
     }
 
@@ -34,6 +40,23 @@ namespace PawnshopKing.Systems.Debt
 
         public static DebtTickResult ProcessEndOfDay(GameState state)
         {
+            var result = Tick(state);
+
+            // Bankruptcy (GDD 27.1): no cash, nothing left to sell, debt still owed —
+            // the campaign has no way forward, so end it now rather than weeks later.
+            if (!result.gameOver && !result.debtCleared && state.debt.totalDebt > 0
+                && state.cash <= 0 && state.inventory.Count == 0)
+            {
+                result.gameOver = true;
+                result.bankrupt = true;
+                result.message = "No cash and nothing left to sell — the shop is bankrupt.";
+            }
+
+            return result;
+        }
+
+        private static DebtTickResult Tick(GameState state)
+        {
             var result = new DebtTickResult();
 
             if (state.debt.totalDebt <= 0)
@@ -52,6 +75,7 @@ namespace PawnshopKing.Systems.Debt
             // Payment is due tonight.
             result.paymentWasDue = true;
             int amount = Mathf.Min(state.debt.nextPaymentAmount, state.debt.totalDebt);
+            result.amountDue = amount;
 
             if (state.cash >= amount)
             {
@@ -85,6 +109,7 @@ namespace PawnshopKing.Systems.Debt
             state.cash -= amount;
             state.debt.totalDebt -= amount;
             result.paid = true;
+            result.amountPaid = amount;
 
             if (state.debt.totalDebt <= 0)
             {

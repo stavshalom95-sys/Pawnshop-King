@@ -66,31 +66,68 @@ namespace PawnshopKing.UI
             }
         }
 
-        private static TMP_FontAsset rtlBodyFont;
+        private static TMP_FontAsset hebrewFont;
+        private static bool hebrewFontFromProject;
 
         /// <summary>
-        /// Dynamic OS font with Hebrew coverage for the onboarding tips — the TMP
-        /// default atlas is Latin-only and would render tofu. Glyphs populate on
-        /// demand, so no pre-baked atlas asset is needed (zero-editor-wiring).
+        /// Hebrew-capable font for localized labels — the TMP default atlas is
+        /// Latin-only and would render tofu. Prefers a shipped project font
+        /// (drop a STATIC-weight TTF with Hebrew coverage, e.g. Assistant or
+        /// Heebo, at Resources/Fonts/Hebrew.ttf) so every platform renders
+        /// identically; falls back to an OS font with Hebrew coverage. Glyph
+        /// atlases populate dynamically, so no editor-baked TMP asset is required.
         /// </summary>
-        public static TMP_FontAsset RtlBodyFont
+        public static TMP_FontAsset HebrewFont
         {
             get
             {
-                if (rtlBodyFont != null) return rtlBodyFont;
+#if UNITY_EDITOR
+                // Statics survive play sessions with domain reload disabled, so a
+                // fallback cached before the project TTF existed would stick
+                // forever. While serving a fallback, keep re-checking for the
+                // project font; labels pick it up on their next refresh.
+                if (hebrewFont != null && !hebrewFontFromProject)
+                {
+                    var lateProjectFont = TryCreateProjectHebrewFont();
+                    if (lateProjectFont != null)
+                    {
+                        hebrewFont = lateProjectFont;
+                        hebrewFontFromProject = true;
+                    }
+                }
+#endif
+                if (hebrewFont != null) return hebrewFont;
+
+                hebrewFont = TryCreateProjectHebrewFont();
+                if (hebrewFont != null)
+                {
+                    hebrewFontFromProject = true;
+                    return hebrewFont;
+                }
 
                 foreach (var name in new[] { "Segoe UI", "Arial", "Tahoma" })
                 {
                     var osFont = Font.CreateDynamicFontFromOSFont(name, 32);
                     if (osFont == null) continue;
 
-                    rtlBodyFont = TMP_FontAsset.CreateFontAsset(osFont);
-                    if (rtlBodyFont != null) return rtlBodyFont;
+                    hebrewFont = TMP_FontAsset.CreateFontAsset(osFont);
+                    if (hebrewFont != null)
+                    {
+                        Debug.LogWarning("[UITheme] Using OS font fallback for Hebrew — drop a static-weight TTF at Resources/Fonts/Hebrew.ttf for consistent cross-platform rendering.");
+                        return hebrewFont;
+                    }
                 }
 
-                rtlBodyFont = TMP_Settings.defaultFontAsset;
-                return rtlBodyFont;
+                Debug.LogWarning("[UITheme] No Hebrew-capable font found — Hebrew text will render as boxes. Add Resources/Fonts/Hebrew.ttf.");
+                hebrewFont = TMP_Settings.defaultFontAsset;
+                return hebrewFont;
             }
+        }
+
+        private static TMP_FontAsset TryCreateProjectHebrewFont()
+        {
+            var projectFont = Resources.Load<Font>("Fonts/Hebrew");
+            return projectFont != null ? TMP_FontAsset.CreateFontAsset(projectFont) : null;
         }
 
         /// <summary>
@@ -103,11 +140,14 @@ namespace PawnshopKing.UI
         /// </summary>
         public static string PrepareRtl(string text)
         {
+            // Rich-text tags (<color=...>, <size=...>) match first and pass through
+            // untouched — reversing their contents would break TMP's parser.
             return System.Text.RegularExpressions.Regex.Replace(
                 text,
-                "[A-Za-z0-9][A-Za-z0-9 ]*[A-Za-z0-9]|[A-Za-z0-9]",
+                "<[^>]*>|[A-Za-z0-9][A-Za-z0-9 ]*[A-Za-z0-9]|[A-Za-z0-9]",
                 match =>
                 {
+                    if (match.Value[0] == '<') return match.Value;
                     var chars = match.Value.ToCharArray();
                     System.Array.Reverse(chars);
                     return new string(chars);

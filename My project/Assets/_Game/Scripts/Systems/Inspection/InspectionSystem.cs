@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using PawnshopKing.Data;
 using PawnshopKing.Data.Definitions;
 using PawnshopKing.Data.Runtime;
+using PawnshopKing.Systems.DifficultyTier;
 using PawnshopKing.Systems.Upgrades;
 using UnityEngine;
 
@@ -88,7 +89,8 @@ namespace PawnshopKing.Systems.Inspection
             if (!item.playerKnowledge.HasFlag(KnowledgeFlags.ConditionAssessed))
             {
                 float readChance = Mathf.Clamp01(
-                    BaseConditionReadChance + UpgradeSystem.GetEffectBonus(state, UpgradeEffect.ConditionAccuracy));
+                    BaseConditionReadChance + DifficultyTuning.ConditionReadBonus
+                        + UpgradeSystem.GetEffectBonus(state, UpgradeEffect.ConditionAccuracy));
                 if (Random.value < readChance)
                 {
                     item.playerKnowledge |= KnowledgeFlags.ConditionAssessed;
@@ -135,7 +137,8 @@ namespace PawnshopKing.Systems.Inspection
         /// </summary>
         public static void GetValueEstimate(GameState state, ItemInstance item, out int low, out int high)
         {
-            float tighten = Mathf.Clamp01(UpgradeSystem.GetEffectBonus(state, UpgradeEffect.ValueAccuracy));
+            float tighten = Mathf.Clamp01(
+                DifficultyTuning.ValueBandTighten + UpgradeSystem.GetEffectBonus(state, UpgradeEffect.ValueAccuracy));
             float lowFraction = 1f - (1f - ValueBandLow) * (1f - tighten);
             float highFraction = 1f + (ValueBandHigh - 1f) * (1f - tighten);
 

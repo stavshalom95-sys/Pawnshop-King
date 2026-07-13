@@ -7,6 +7,7 @@ using PawnshopKing.Data.Definitions;
 using PawnshopKing.Data.Runtime;
 using PawnshopKing.Systems.Inspection;
 using PawnshopKing.Systems.Items;
+using PawnshopKing.Systems.Localization;
 using PawnshopKing.Systems.Negotiation;
 using TMPro;
 using UnityEngine;
@@ -114,16 +115,27 @@ namespace PawnshopKing.UI
             gm.Day.DayStarted += OnDayStarted;
             gm.Day.CustomerArrived += OnCustomerArrived;
             gm.Day.DayEnded += OnDayEnded;
+            LanguageManager.LanguageChanged += OnLanguageChanged;
         }
 
         private void OnDestroy()
         {
+            LanguageManager.LanguageChanged -= OnLanguageChanged;
             if (gm == null) return;
             gm.PhaseChanged -= OnPhaseChanged;
             if (gm.Day == null) return;
             gm.Day.DayStarted -= OnDayStarted;
             gm.Day.CustomerArrived -= OnCustomerArrived;
             gm.Day.DayEnded -= OnDayEnded;
+        }
+
+        /// <summary>Static labels re-render themselves; this refreshes the value-bearing ones.</summary>
+        private void OnLanguageChanged()
+        {
+            RefreshActionButton();
+            RefreshBuyLabel();
+            foreach (var row in itemRows) RefreshItemRow(row);
+            UpdateTip();
         }
 
         private void Update()
@@ -255,10 +267,12 @@ namespace PawnshopKing.UI
             switch (result.outcome)
             {
                 case OfferOutcome.Accepted:
+                    Systems.Audio.AudioManager.Instance?.PlayAccept();
                     dealFeedbackText.text = $"Deal. You hand over ${result.price:N0}.{LeftoverSuffix()}";
                     ConcludeVisit();
                     break;
                 case OfferOutcome.AcceptedReluctantly:
+                    Systems.Audio.AudioManager.Instance?.PlayAccept();
                     dealFeedbackText.text = $"“Fine. Just give me the money.” You pay ${result.price:N0}.{LeftoverSuffix()}";
                     ConcludeVisit();
                     break;
@@ -269,10 +283,12 @@ namespace PawnshopKing.UI
                     UpdateTip();
                     break;
                 case OfferOutcome.OffendedLeft:
+                    Systems.Audio.AudioManager.Instance?.PlayReject();
                     dealFeedbackText.text = "“Insulting.” They storm out. Word gets around. (Reputation -1)";
                     ConcludeVisit();
                     break;
                 case OfferOutcome.GaveUpLeft:
+                    Systems.Audio.AudioManager.Instance?.PlayReject();
                     dealFeedbackText.text = "“Forget it.” They pack up and leave.";
                     ConcludeVisit();
                     break;
@@ -297,6 +313,7 @@ namespace PawnshopKing.UI
             }
 
             var result = NegotiationSystem.BuyAtAskingPrice(gm.State, currentCustomer, currentArchetype, selection);
+            Systems.Audio.AudioManager.Instance?.PlayAccept();
             dealFeedbackText.text = $"Bought at asking price — ${result.price:N0}. Fair dealing. (Reputation +1){LeftoverSuffix()}";
             ConcludeVisit();
         }
@@ -306,6 +323,7 @@ namespace PawnshopKing.UI
             if (!InNegotiation()) return;
 
             DisarmOffer();
+            Systems.Audio.AudioManager.Instance?.PlayReject();
             NegotiationSystem.Reject(currentCustomer);
             dealFeedbackText.text = "You wave them off. They take their goods elsewhere.";
             ConcludeVisit();
@@ -407,8 +425,6 @@ namespace PawnshopKing.UI
             toggleLabel.transform.parent.GetComponent<LayoutElement>().preferredHeight = 36f;
 
             tipText = CreateText(rowGO.transform, "TipText", 19f, TextAlignmentOptions.Right);
-            tipText.font = UITheme.RtlBodyFont;
-            tipText.isRightToLeftText = true;
             tipText.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
 
             UpdateTip();
@@ -434,33 +450,28 @@ namespace PawnshopKing.UI
             }
 
             tipBackground.color = UITheme.SurfaceRaised;
-            tipText.text = UITheme.PrepareRtl(ChooseTip());
+            tipText.alignment = LanguageManager.IsRtl ? TextAlignmentOptions.Right : TextAlignmentOptions.Left;
+            Loc.Set(tipText, Loc.T(ChooseTipKey()));
         }
 
         /// <summary>One sentence for where the player actually is, not a manual.</summary>
-        private string ChooseTip()
+        private string ChooseTipKey()
         {
             if (!InNegotiation())
             {
                 return gm.Day != null && gm.Day.CustomersRemaining > 0
-                    ? "לחץ על Next Customer כדי לקרוא ללקוח הבא"
-                    : "לחץ על Close Shop כדי לסגור את היום";
+                    ? LanguageManager.Keys.TipNextCustomer
+                    : LanguageManager.Keys.TipCloseShop;
             }
 
             foreach (var row in itemRows)
             {
-                if (row.item.timesInspected == 0)
-                {
-                    return "לחץ על Inspect כדי לבדוק את החפץ לפני שקונים";
-                }
+                if (row.item.timesInspected == 0) return LanguageManager.Keys.TipInspect;
             }
 
-            if (currentCustomer.offersMade == 0)
-            {
-                return "הצע פחות מהמחיר המבוקש — מיקוח הוא כל הרווח";
-            }
-
-            return "אפשר להתמקח שוב, לקנות עם Buy או לסרב עם Reject";
+            return currentCustomer.offersMade == 0
+                ? LanguageManager.Keys.TipOpenLow
+                : LanguageManager.Keys.TipHaggle;
         }
 
         /// <summary>Focus left the amount field: clicking away cancels the armed state.</summary>
@@ -498,7 +509,9 @@ namespace PawnshopKing.UI
         private void RefreshBuyLabel()
         {
             if (currentCustomer == null) return;
-            buyLabel.text = currentCustomer.askingPrice > 0 ? $"Buy  ${currentCustomer.askingPrice:N0}" : "Buy  —";
+            Loc.Set(buyLabel, currentCustomer.askingPrice > 0
+                ? Loc.F(LanguageManager.Keys.BuyAmount, currentCustomer.askingPrice.ToString("N0"))
+                : Loc.T(LanguageManager.Keys.Buy) + "  —");
         }
 
         // ---- Item rows (counter + inspection, GDD 12) -----------------------
@@ -641,7 +654,9 @@ namespace PawnshopKing.UI
 
             bool canInspect = InspectionSystem.CanInspect(item);
             row.inspectButton.interactable = canInspect;
-            row.inspectLabel.text = canInspect ? $"Inspect ({InspectionSystem.InspectionsLeft(item)})" : "Inspected";
+            Loc.Set(row.inspectLabel, canInspect
+                ? Loc.F(LanguageManager.Keys.Inspect, InspectionSystem.InspectionsLeft(item))
+                : Loc.T(LanguageManager.Keys.Inspected));
             row.inspectImage.color = canInspect ? ButtonColor : UITheme.DisabledButton;
             row.inspectLabel.color = canInspect ? ButtonTextColor : UITheme.DisabledLabel;
         }
@@ -666,16 +681,18 @@ namespace PawnshopKing.UI
             switch (gm.Phase)
             {
                 case GamePhase.DayActive:
-                    actionLabel.text = gm.Day.CustomersRemaining > 0 ? "Next Customer" : "Close Shop";
+                    Loc.Set(actionLabel, Loc.T(gm.Day.CustomersRemaining > 0
+                        ? LanguageManager.Keys.NextCustomer
+                        : LanguageManager.Keys.CloseShop));
                     break;
                 case GamePhase.DaySummary:
-                    actionLabel.text = $"Open Day {gm.State.currentDay + 1}";
+                    Loc.Set(actionLabel, Loc.F(LanguageManager.Keys.OpenDay, gm.State.currentDay + 1));
                     break;
                 case GamePhase.GameOver:
-                    actionLabel.text = "Game Over";
+                    Loc.Set(actionLabel, Loc.T(LanguageManager.Keys.GameOver));
                     break;
                 case GamePhase.Victory:
-                    actionLabel.text = "Campaign Complete";
+                    Loc.Set(actionLabel, Loc.T(LanguageManager.Keys.Victory));
                     break;
             }
         }
@@ -821,6 +838,7 @@ namespace PawnshopKing.UI
             // Inventory screen toggle, bottom-left (GDD 32.1 B).
             var inventoryLabel = CreateSmallButton(gameplay, "Inventory", 200f,
                 () => InventoryUIManager.Instance?.Toggle());
+            LocalizedLabel.Bind(inventoryLabel, LanguageManager.Keys.Inventory);
             var inventoryRect = (RectTransform)inventoryLabel.transform.parent;
             inventoryRect.anchorMin = inventoryRect.anchorMax = Vector2.zero;
             inventoryRect.pivot = Vector2.zero;
@@ -830,6 +848,7 @@ namespace PawnshopKing.UI
             // Upgrade shop toggle next to it (GDD 23.1).
             var upgradesLabel = CreateSmallButton(gameplay, "Upgrades", 200f,
                 () => UpgradeUIManager.Instance?.Toggle());
+            LocalizedLabel.Bind(upgradesLabel, LanguageManager.Keys.Upgrades);
             var upgradesRect = (RectTransform)upgradesLabel.transform.parent;
             upgradesRect.anchorMin = upgradesRect.anchorMax = Vector2.zero;
             upgradesRect.pivot = Vector2.zero;
@@ -891,9 +910,11 @@ namespace PawnshopKing.UI
 
             var offerLabel = CreateSmallButton(dealControls.transform, "Offer", 110f, OnOfferClicked);
             offerButtonImage = offerLabel.transform.parent.GetComponent<Image>();
+            LocalizedLabel.Bind(offerLabel, LanguageManager.Keys.Offer);
 
             buyLabel = CreateSmallButton(dealControls.transform, "Buy", 190f, OnBuyClicked);
-            CreateSmallButton(dealControls.transform, "Reject", 110f, OnRejectClicked);
+            var rejectLabel = CreateSmallButton(dealControls.transform, "Reject", 110f, OnRejectClicked);
+            LocalizedLabel.Bind(rejectLabel, LanguageManager.Keys.Reject);
 
             dealControls.SetActive(false);
         }

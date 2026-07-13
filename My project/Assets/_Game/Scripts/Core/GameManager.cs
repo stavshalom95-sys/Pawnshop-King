@@ -1,5 +1,6 @@
 using System;
 using PawnshopKing.Data.Runtime;
+using PawnshopKing.Systems.DifficultyTier;
 using PawnshopKing.Systems.SaveLoad;
 using UnityEngine;
 
@@ -68,6 +69,7 @@ namespace PawnshopKing.Core
                 }
             };
 
+            DifficultyTuning.Current = State.difficulty;
             BeginDay();
         }
 
@@ -82,8 +84,16 @@ namespace PawnshopKing.Core
 
             State = loaded;
             State.currentDay++;
+            DifficultyTuning.Current = State.difficulty;
             BeginDay();
             return true;
+        }
+
+        /// <summary>Settings-menu entry point: persists with the campaign and takes effect immediately.</summary>
+        public void SetDifficulty(Data.Difficulty difficulty)
+        {
+            if (State != null) State.difficulty = difficulty;
+            DifficultyTuning.Current = difficulty;
         }
 
         /// <summary>Opens the shop for the current day: DayManager builds the queue.</summary>

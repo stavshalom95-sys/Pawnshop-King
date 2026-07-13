@@ -4,6 +4,7 @@ using PawnshopKing.Data;
 using PawnshopKing.Data.Runtime;
 using PawnshopKing.Systems.Inspection;
 using PawnshopKing.Systems.Items;
+using PawnshopKing.Systems.Localization;
 using PawnshopKing.Systems.Market;
 using TMPro;
 using UnityEngine;
@@ -43,12 +44,19 @@ namespace PawnshopKing.UI
             // Day transitions seize/liquidate inventory behind this screen's back —
             // close on any phase change so stale rows are never left clickable.
             gm.PhaseChanged += OnPhaseChanged;
+            LanguageManager.LanguageChanged += OnLanguageChanged;
         }
 
         private void OnDestroy()
         {
             if (Instance == this) Instance = null;
             if (gm != null) gm.PhaseChanged -= OnPhaseChanged;
+            LanguageManager.LanguageChanged -= OnLanguageChanged;
+        }
+
+        private void OnLanguageChanged()
+        {
+            if (screenRoot.activeSelf) RebuildList();
         }
 
         private void OnPhaseChanged(GamePhase phase) => Close();
@@ -76,7 +84,7 @@ namespace PawnshopKing.UI
             foreach (Transform child in listContent) Destroy(child.gameObject);
 
             var inventory = gm.State.inventory;
-            titleText.text = $"Inventory — {inventory.Count} item{(inventory.Count == 1 ? "" : "s")}";
+            Loc.Set(titleText, Loc.F(LanguageManager.Keys.InventoryTitle, inventory.Count), UITheme.HeaderFont);
 
             foreach (var item in inventory) CreateRow(item);
         }
@@ -106,25 +114,27 @@ namespace PawnshopKing.UI
             info.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
             info.text = BuildInfo(item);
 
-            CreateChannelButton(rowGO.transform, item, SellChannel.Shopfront, "Shop");
-            CreateChannelButton(rowGO.transform, item, SellChannel.Collector, "Collector");
-            CreateChannelButton(rowGO.transform, item, SellChannel.BlackMarket, "Black Mkt");
+            CreateChannelButton(rowGO.transform, item, SellChannel.Shopfront, LanguageManager.Keys.ChannelShop);
+            CreateChannelButton(rowGO.transform, item, SellChannel.Collector, LanguageManager.Keys.ChannelCollector);
+            CreateChannelButton(rowGO.transform, item, SellChannel.BlackMarket, LanguageManager.Keys.ChannelBlackMarket);
         }
 
-        private void CreateChannelButton(Transform parent, ItemInstance item, SellChannel channel, string channelName)
+        private void CreateChannelButton(Transform parent, ItemInstance item, SellChannel channel, string channelKey)
         {
             var quote = MarketSystem.GetQuote(gm.State, item, channel);
-            var label = HUDUIManager.CreateSmallButton(parent, channelName, 170f,
+            var label = HUDUIManager.CreateSmallButton(parent, channelKey, 170f,
                 () => OnSellClicked(item, channel));
 
             var button = label.transform.parent.GetComponent<Button>();
             if (quote.available)
             {
-                label.text = $"{channelName} ${quote.price:N0}";
+                Loc.Set(label, $"{Loc.T(channelKey)} ${quote.price:N0}");
             }
             else
             {
-                label.text = channel == SellChannel.BlackMarket ? "Raided — closed" : "No collector";
+                Loc.Set(label, Loc.T(channel == SellChannel.BlackMarket
+                    ? LanguageManager.Keys.BlackMarketClosed
+                    : LanguageManager.Keys.NoCollector));
                 label.color = UITheme.DisabledLabel;
                 button.interactable = false;
                 label.transform.parent.GetComponent<Image>().color = UITheme.DisabledButton;
@@ -203,6 +213,7 @@ namespace PawnshopKing.UI
             titleRect.sizeDelta = new Vector2(titleRect.sizeDelta.x, 40f);
 
             var closeLabel = HUDUIManager.CreateSmallButton(root, "Close", 130f, Close);
+            LocalizedLabel.Bind(closeLabel, LanguageManager.Keys.Close);
             var closeRect = (RectTransform)closeLabel.transform.parent;
             closeRect.anchorMin = closeRect.anchorMax = Vector2.one;
             closeRect.pivot = Vector2.one;

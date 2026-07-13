@@ -1,6 +1,7 @@
 using System.Text;
 using PawnshopKing.Core;
 using PawnshopKing.Data.Definitions;
+using PawnshopKing.Systems.Localization;
 using PawnshopKing.Systems.Upgrades;
 using TMPro;
 using UnityEngine;
@@ -41,12 +42,19 @@ namespace PawnshopKing.UI
             // Close on day transitions alongside the inventory screen, so no overlay
             // ever lingers over the next morning's counter.
             gm.PhaseChanged += OnPhaseChanged;
+            LanguageManager.LanguageChanged += OnLanguageChanged;
         }
 
         private void OnDestroy()
         {
             if (Instance == this) Instance = null;
             if (gm != null) gm.PhaseChanged -= OnPhaseChanged;
+            LanguageManager.LanguageChanged -= OnLanguageChanged;
+        }
+
+        private void OnLanguageChanged()
+        {
+            if (screenRoot.activeSelf) RebuildList();
         }
 
         private void OnPhaseChanged(GamePhase phase) => Close();
@@ -80,7 +88,7 @@ namespace PawnshopKing.UI
                 if (UpgradeSystem.IsOwned(gm.State, upgrade.id)) owned++;
             }
 
-            titleText.text = $"Upgrades — {owned}/{upgrades.Count} tools installed";
+            Loc.Set(titleText, Loc.F(LanguageManager.Keys.UpgradesTitle, owned, upgrades.Count), UITheme.HeaderFont);
 
             foreach (var upgrade in upgrades) CreateRow(upgrade);
         }
@@ -116,20 +124,19 @@ namespace PawnshopKing.UI
 
             if (isOwned)
             {
-                label.text = "Installed";
+                Loc.Set(label, Loc.T(LanguageManager.Keys.Installed));
                 button.interactable = false;
                 label.transform.parent.GetComponent<Image>().color = UITheme.Success;
             }
-            else if (!canAfford)
-            {
-                label.text = $"Buy  ${upgrade.cost:N0}";
-                label.color = UITheme.DisabledLabel;
-                button.interactable = false;
-                label.transform.parent.GetComponent<Image>().color = UITheme.DisabledButton;
-            }
             else
             {
-                label.text = $"Buy  ${upgrade.cost:N0}";
+                Loc.Set(label, Loc.F(LanguageManager.Keys.BuyAmount, upgrade.cost.ToString("N0")));
+                if (!canAfford)
+                {
+                    label.color = UITheme.DisabledLabel;
+                    button.interactable = false;
+                    label.transform.parent.GetComponent<Image>().color = UITheme.DisabledButton;
+                }
             }
         }
 
@@ -195,6 +202,7 @@ namespace PawnshopKing.UI
             titleRect.sizeDelta = new Vector2(titleRect.sizeDelta.x, 40f);
 
             var closeLabel = HUDUIManager.CreateSmallButton(root, "Close", 130f, Close);
+            LocalizedLabel.Bind(closeLabel, LanguageManager.Keys.Close);
             var closeRect = (RectTransform)closeLabel.transform.parent;
             closeRect.anchorMin = closeRect.anchorMax = Vector2.one;
             closeRect.pivot = Vector2.one;

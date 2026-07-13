@@ -1,4 +1,5 @@
 using PawnshopKing.Core;
+using PawnshopKing.Systems.Localization;
 using PawnshopKing.Systems.SaveLoad;
 using TMPro;
 using UnityEngine;
@@ -65,14 +66,14 @@ namespace PawnshopKing.UI
             continueButton.SetActive(hasSave);
             if (hasSave)
             {
-                continueLabel.text = $"Continue — Day {saved.currentDay + 1}";
+                Loc.Set(continueLabel, Loc.F(LanguageManager.Keys.ContinueDay, saved.currentDay + 1));
             }
 
-            newGameLabel.text = hasSave ? "New Game (erases save)" : "New Game";
+            Loc.Set(newGameLabel, Loc.T(hasSave ? LanguageManager.Keys.NewGameErases : LanguageManager.Keys.NewGame));
 
-            noticeText.text = !hasSave && SaveLoadSystem.HasSave()
-                ? "A previous save exists but could not be read."
-                : string.Empty;
+            Loc.Set(noticeText, !hasSave && SaveLoadSystem.HasSave()
+                ? Loc.T(LanguageManager.Keys.SaveUnreadable)
+                : string.Empty);
         }
 
         private void OnContinueClicked()

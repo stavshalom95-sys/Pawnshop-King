@@ -1,5 +1,8 @@
 using PawnshopKing.Core;
+using PawnshopKing.Data;
 using PawnshopKing.Systems.Audio;
+using PawnshopKing.Systems.DifficultyTier;
+using PawnshopKing.Systems.Localization;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
@@ -26,6 +29,8 @@ namespace PawnshopKing.UI
         private GameObject screenRoot;
         private GameObject mainView;
         private GameObject settingsView;
+        private TextMeshProUGUI musicToggleLabel;
+        private TextMeshProUGUI difficultyLabel;
 
         public bool IsOpen => screenRoot != null && screenRoot.activeSelf;
 
@@ -42,12 +47,27 @@ namespace PawnshopKing.UI
 
             GameAudioSettings.Apply();
             BuildScreen();
+            LanguageManager.LanguageChanged += RefreshDynamicSettings;
         }
 
         private void OnDestroy()
         {
+            LanguageManager.LanguageChanged -= RefreshDynamicSettings;
             if (Instance == this) Instance = null;
             if (IsOpen) Time.timeScale = 1f; // never leave the game frozen behind us
+        }
+
+        /// <summary>Settings whose button text depends on state (not just language): music on/off, difficulty.</summary>
+        private void RefreshDynamicSettings()
+        {
+            Loc.Set(musicToggleLabel, Loc.T(GameAudioSettings.MusicEnabled
+                ? LanguageManager.Keys.On
+                : LanguageManager.Keys.Off));
+
+            var difficulty = gm.State != null ? gm.State.difficulty : DifficultyTuning.Current;
+            Loc.Set(difficultyLabel, Loc.T(difficulty == Difficulty.Easy
+                ? LanguageManager.Keys.DifficultyEasy
+                : LanguageManager.Keys.DifficultyHard));
         }
 
         private void Update()
@@ -73,6 +93,7 @@ namespace PawnshopKing.UI
         {
             Time.timeScale = 0f;
             ShowMainView();
+            RefreshDynamicSettings();
             screenRoot.SetActive(true);
             UIFx.FadeIn(this, screenRoot);
         }
@@ -127,7 +148,7 @@ namespace PawnshopKing.UI
             mainView = BuildView(dim, "MainView", new Vector2(520f, 480f), out var mainContent);
             BuildMainView(mainContent);
 
-            settingsView = BuildView(dim, "SettingsView", new Vector2(620f, 480f), out var settingsContent);
+            settingsView = BuildView(dim, "SettingsView", new Vector2(620f, 620f), out var settingsContent);
             BuildSettingsView(settingsContent);
 
             screenRoot.SetActive(false);
@@ -165,48 +186,97 @@ namespace PawnshopKing.UI
         private void BuildMainView(RectTransform content)
         {
             var title = HUDUIManager.CreateText(content, "Title", 40f, TextAlignmentOptions.Center, FontStyles.Bold, header: true);
-            title.text = "PAUSED";
             title.color = UITheme.NeonCyan;
             SetRowHeight(title.rectTransform, 56f);
+            LocalizedLabel.Bind(title, LanguageManager.Keys.Paused);
 
             AddSpacer(content, 12f);
-            CreateMenuButton(content, "Resume", Close);
-            CreateMenuButton(content, "Settings", ShowSettingsView);
-            CreateMenuButton(content, "Quit to Main Menu", OnQuitToMenuClicked);
+            CreateMenuButton(content, LanguageManager.Keys.Resume, Close);
+            CreateMenuButton(content, LanguageManager.Keys.Settings, ShowSettingsView);
+            CreateMenuButton(content, LanguageManager.Keys.QuitToMenu, OnQuitToMenuClicked);
 
             var note = HUDUIManager.CreateText(content, "Note", 16f, TextAlignmentOptions.Center, FontStyles.Italic);
-            note.text = "Progress since this morning isn't saved until the day ends.";
             note.color = HUDUIManager.MutedColor;
             SetRowHeight(note.rectTransform, 40f);
+            LocalizedLabel.Bind(note, LanguageManager.Keys.PauseNote);
         }
 
         private void BuildSettingsView(RectTransform content)
         {
             var title = HUDUIManager.CreateText(content, "Title", 34f, TextAlignmentOptions.Center, FontStyles.Bold, header: true);
-            title.text = "SETTINGS";
             title.color = UITheme.NeonCyan;
             SetRowHeight(title.rectTransform, 48f);
+            LocalizedLabel.Bind(title, LanguageManager.Keys.Settings);
 
             AddSpacer(content, 10f);
-            CreateVolumeRow(content, "Master", GameAudioSettings.Master, v => GameAudioSettings.Master = v);
-            CreateVolumeRow(content, "SFX", GameAudioSettings.Sfx, v => GameAudioSettings.Sfx = v);
-            CreateVolumeRow(content, "Music", GameAudioSettings.Music, v => GameAudioSettings.Music = v);
+            CreateVolumeRow(content, LanguageManager.Keys.Master, GameAudioSettings.Master, v => GameAudioSettings.Master = v);
+            CreateVolumeRow(content, LanguageManager.Keys.Sfx, GameAudioSettings.Sfx, v => GameAudioSettings.Sfx = v);
+            CreateVolumeRow(content, LanguageManager.Keys.Music, GameAudioSettings.Music, v => GameAudioSettings.Music = v);
+
+            AddSpacer(content, 10f);
+            musicToggleLabel = CreateSettingRow(content, LanguageManager.Keys.Music, OnMusicToggleClicked);
+            difficultyLabel = CreateSettingRow(content, LanguageManager.Keys.DifficultyLabel, OnDifficultyClicked);
+
+            var languageButton = CreateSettingRow(content, LanguageManager.Keys.Language, LanguageManager.Toggle);
+            LocalizedLabel.Bind(languageButton, LanguageManager.Keys.LanguageName);
 
             AddSpacer(content, 14f);
-            CreateMenuButton(content, "Back", ShowMainView);
+            CreateMenuButton(content, LanguageManager.Keys.Back, ShowMainView);
         }
 
-        private static void CreateMenuButton(Transform parent, string label, UnityAction onClick)
+        private void OnMusicToggleClicked()
         {
-            var text = HUDUIManager.CreateSmallButton(parent, label, 360f, onClick);
+            GameAudioSettings.MusicEnabled = !GameAudioSettings.MusicEnabled;
+            RefreshDynamicSettings();
+        }
+
+        private void OnDifficultyClicked()
+        {
+            var current = gm.State != null ? gm.State.difficulty : DifficultyTuning.Current;
+            gm.SetDifficulty(current == Difficulty.Easy ? Difficulty.Hard : Difficulty.Easy);
+            RefreshDynamicSettings();
+        }
+
+        /// <summary>A settings row: bound label on the left, a state-showing toggle button on the right.</summary>
+        private static TextMeshProUGUI CreateSettingRow(Transform parent, string labelKey, UnityAction onClick)
+        {
+            var rowGO = new GameObject(labelKey + "Row", typeof(RectTransform), typeof(HorizontalLayoutGroup));
+            rowGO.transform.SetParent(parent, false);
+            rowGO.AddComponent<LayoutElement>().preferredHeight = 44f;
+
+            var layout = rowGO.GetComponent<HorizontalLayoutGroup>();
+            layout.spacing = 14f;
+            layout.childAlignment = TextAnchor.MiddleLeft;
+            layout.childControlWidth = true;
+            layout.childControlHeight = true;
+            layout.childForceExpandWidth = false;
+            layout.childForceExpandHeight = false;
+
+            var labelText = HUDUIManager.CreateText(rowGO.transform, "Label", 21f, TextAlignmentOptions.Left);
+            labelText.gameObject.AddComponent<LayoutElement>().preferredWidth = 150f;
+            LocalizedLabel.Bind(labelText, labelKey);
+
+            var spacerGO = new GameObject("Spacer", typeof(RectTransform), typeof(LayoutElement));
+            spacerGO.transform.SetParent(rowGO.transform, false);
+            spacerGO.GetComponent<LayoutElement>().flexibleWidth = 1f;
+
+            var buttonLabel = HUDUIManager.CreateSmallButton(rowGO.transform, labelKey + "Toggle", 200f, onClick);
+            buttonLabel.transform.parent.GetComponent<LayoutElement>().preferredHeight = 40f;
+            return buttonLabel;
+        }
+
+        private static void CreateMenuButton(Transform parent, string key, UnityAction onClick)
+        {
+            var text = HUDUIManager.CreateSmallButton(parent, LanguageManager.T(key), 360f, onClick);
             var layoutElement = text.transform.parent.GetComponent<LayoutElement>();
             layoutElement.preferredHeight = 58f;
             text.fontSize = 23f;
+            LocalizedLabel.Bind(text, key);
         }
 
-        private void CreateVolumeRow(Transform parent, string label, float initial, UnityAction<float> onChanged)
+        private void CreateVolumeRow(Transform parent, string labelKey, float initial, UnityAction<float> onChanged)
         {
-            var rowGO = new GameObject(label + "Row", typeof(RectTransform), typeof(HorizontalLayoutGroup));
+            var rowGO = new GameObject(labelKey + "Row", typeof(RectTransform), typeof(HorizontalLayoutGroup));
             rowGO.transform.SetParent(parent, false);
             rowGO.AddComponent<LayoutElement>().preferredHeight = 36f;
 
@@ -219,8 +289,8 @@ namespace PawnshopKing.UI
             layout.childForceExpandHeight = false;
 
             var labelText = HUDUIManager.CreateText(rowGO.transform, "Label", 21f, TextAlignmentOptions.Left);
-            labelText.text = label;
             labelText.gameObject.AddComponent<LayoutElement>().preferredWidth = 120f;
+            LocalizedLabel.Bind(labelText, labelKey);
 
             var valueText = HUDUIManager.CreateText(rowGO.transform, "Value", 20f, TextAlignmentOptions.Right);
             valueText.text = $"{Mathf.RoundToInt(initial * 100)}%";
