@@ -145,6 +145,11 @@ namespace PawnshopKing.UI
         {
             var receipt = MarketSystem.Sell(gm.State, item, channel);
             feedbackText.text = receipt.message;
+            if (receipt.sold)
+            {
+                UIFx.SpawnMoneyFloater(this, (RectTransform)screenRoot.transform, receipt.price, new Vector2(0f, 120f));
+            }
+
             RebuildList();
         }
 

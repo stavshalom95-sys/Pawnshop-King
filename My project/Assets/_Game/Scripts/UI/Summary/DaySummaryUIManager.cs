@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Text;
 using PawnshopKing.Core;
 using PawnshopKing.Systems.Localization;
@@ -21,6 +22,14 @@ namespace PawnshopKing.UI
         private TextMeshProUGUI titleText;
         private TextMeshProUGUI bodyText;
         private TextMeshProUGUI continueLabel;
+
+        // Juice: profit counts up from zero, then the debt verdict gets stamped.
+        private GameObject stampGO;
+        private TextMeshProUGUI stampLabel;
+        private GamePhase shownPhase;
+        private int finalProfit;
+        private bool bodyAnimating;
+        private Coroutine bodyRoutine;
 
         private void Awake()
         {
@@ -63,9 +72,21 @@ namespace PawnshopKing.UI
             }
         }
 
+        private void Update()
+        {
+            // Click fast-forwards the count-up straight to the stamped verdict.
+            if (!bodyAnimating || !screenRoot.activeSelf) return;
+            if (!UIFx.SkipClickPressed()) return;
+
+            if (bodyRoutine != null) StopCoroutine(bodyRoutine);
+            FinishBody();
+        }
+
         private void Show(GamePhase phase)
         {
             var s = gm.State;
+            shownPhase = phase;
+            finalProfit = s.cash - s.dayStartCash;
             bool gameOver = phase == GamePhase.GameOver;
             bool victory = phase == GamePhase.Victory;
 
@@ -77,8 +98,51 @@ namespace PawnshopKing.UI
                 : victory ? UITheme.Gold
                 : HUDUIManager.TextColor;
 
+            Loc.Set(continueLabel, gameOver || victory
+                ? Loc.T(LanguageManager.Keys.NewCampaign)
+                : Loc.F(LanguageManager.Keys.OpenDay, s.currentDay + 1));
+
+            stampGO.SetActive(false);
+            if (bodyRoutine != null) StopCoroutine(bodyRoutine);
+            bodyRoutine = StartCoroutine(BodyCountUpRoutine());
+
+            screenRoot.SetActive(true);
+            UIFx.FadeIn(this, screenRoot);
+        }
+
+        private IEnumerator BodyCountUpRoutine()
+        {
+            bodyAnimating = true;
+            const float duration = 0.7f;
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float t = Mathf.Clamp01(elapsed / duration);
+                RenderBody(Mathf.RoundToInt(Mathf.Lerp(0f, finalProfit, 1f - (1f - t) * (1f - t))));
+                yield return null;
+            }
+
+            FinishBody();
+        }
+
+        private void FinishBody()
+        {
+            bodyAnimating = false;
+            bodyRoutine = null;
+            RenderBody(finalProfit);
+            ShowStamp();
+        }
+
+        /// <summary>Composes the summary body with the profit line at the given (possibly mid-count) value.</summary>
+        private void RenderBody(int profitShown)
+        {
+            var s = gm.State;
+            bool gameOver = shownPhase == GamePhase.GameOver;
+            bool victory = shownPhase == GamePhase.Victory;
+
             var sb = new StringBuilder();
-            sb.Append(Loc.F(LanguageManager.Keys.SummaryProfitToday, Delta(s.cash - s.dayStartCash, "$")));
+            sb.Append(Loc.F(LanguageManager.Keys.SummaryProfitToday, Delta(profitShown, "$")));
             sb.Append("\n" + Loc.F(LanguageManager.Keys.SummaryReputation, Delta(s.reputation - s.dayStartReputation), s.reputation));
             sb.Append("\n" + Loc.F(LanguageManager.Keys.SummaryHeat, Delta(s.heat - s.dayStartHeat), s.heat));
             sb.Append($"\n\n<color=#C9B458>{DebtLine(gm.Day.LastDebtResult, s)}</color>");
@@ -96,11 +160,44 @@ namespace PawnshopKing.UI
 
             bodyText.alignment = LanguageManager.IsRtl ? TextAlignmentOptions.TopRight : TextAlignmentOptions.TopLeft;
             Loc.Set(bodyText, sb.ToString());
-            Loc.Set(continueLabel, gameOver || victory
-                ? Loc.T(LanguageManager.Keys.NewCampaign)
-                : Loc.F(LanguageManager.Keys.OpenDay, s.currentDay + 1));
-            screenRoot.SetActive(true);
-            UIFx.FadeIn(this, screenRoot);
+        }
+
+        /// <summary>Rubber-stamps the debt verdict: PAID (green) or SEIZED (red). Nothing when no payment resolved.</summary>
+        private void ShowStamp()
+        {
+            var debt = gm.Day.LastDebtResult;
+
+            string key;
+            Color color;
+            if (debt.forcedSale) { key = LanguageManager.Keys.StampSeized; color = UITheme.Danger; }
+            else if (debt.debtCleared || debt.paid) { key = LanguageManager.Keys.StampPaid; color = UITheme.Success; }
+            else return;
+
+            Loc.Set(stampLabel, Loc.T(key), UITheme.HeaderFont);
+            stampLabel.color = color;
+            stampGO.SetActive(true);
+            StartCoroutine(StampSlamRoutine());
+        }
+
+        private IEnumerator StampSlamRoutine()
+        {
+            var rect = (RectTransform)stampGO.transform;
+            var group = stampGO.GetComponent<CanvasGroup>();
+            const float duration = 0.22f;
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                if (rect == null) yield break;
+                elapsed += Time.unscaledDeltaTime;
+                float t = Mathf.Clamp01(elapsed / duration);
+                float slam = t * t; // ease-in: falls onto the page
+                rect.localScale = Vector3.one * Mathf.Lerp(2.1f, 1f, slam);
+                group.alpha = t;
+                yield return null;
+            }
+
+            rect.localScale = Vector3.one;
+            group.alpha = 1f;
         }
 
         /// <summary>Localized debt verdict composed from the tick's structured fields, not its English message.</summary>
@@ -217,7 +314,37 @@ namespace PawnshopKing.UI
             buttonLayout.preferredHeight = 62f;
             continueLabel.fontSize = 24f;
 
+            BuildStamp(panel);
+
             screenRoot.SetActive(false);
+        }
+
+        /// <summary>The rubber stamp: top-right of the panel, tilted, outside the vertical layout's control.</summary>
+        private void BuildStamp(RectTransform panel)
+        {
+            stampGO = new GameObject("VerdictStamp", typeof(RectTransform), typeof(CanvasGroup));
+            stampGO.transform.SetParent(panel, false);
+            stampGO.AddComponent<LayoutElement>().ignoreLayout = true;
+
+            var rect = (RectTransform)stampGO.transform;
+            rect.anchorMin = rect.anchorMax = new Vector2(1f, 1f);
+            rect.pivot = new Vector2(1f, 1f);
+            rect.anchoredPosition = new Vector2(-32f, -22f);
+            rect.sizeDelta = new Vector2(240f, 64f);
+            rect.localRotation = Quaternion.Euler(0f, 0f, -8f);
+
+            stampLabel = stampGO.AddComponent<TextMeshProUGUI>();
+            stampLabel.fontSize = 42f;
+            stampLabel.fontStyle = FontStyles.Bold;
+            stampLabel.alignment = TextAlignmentOptions.Center;
+            stampLabel.raycastTarget = false;
+            if (UITheme.HeaderFont != null)
+            {
+                stampLabel.font = UITheme.HeaderFont;
+                stampLabel.characterSpacing = UITheme.HeaderCharacterSpacing;
+            }
+
+            stampGO.SetActive(false);
         }
     }
 }
