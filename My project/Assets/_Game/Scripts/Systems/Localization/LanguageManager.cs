@@ -125,6 +125,9 @@ namespace PawnshopKing.Systems.Localization
             public const string VictoryNarrative = "victory_narrative";    // {0} = days
             public const string VictoryStats = "victory_stats";            // cash, rep, heat, items, tools, total, missed
 
+            public const string StampPaid = "stamp_paid";
+            public const string StampSeized = "stamp_seized";
+
             public const string On = "on";
             public const string Off = "off";
             public const string DifficultyLabel = "difficulty";
@@ -201,6 +204,9 @@ namespace PawnshopKing.Systems.Localization
             [Keys.VictoryNarrative] = "The inherited debt is history. In {0} days you turned a dying shop into your own — the Pawnshop King.",
             [Keys.VictoryStats] = "Final cash: ${0}\nReputation: {1}   ·   Heat: {2}\nInventory: {3} item(s) still on the shelves\nTools installed: {4}/{5}\nPayments missed along the way: {6}",
 
+            [Keys.StampPaid] = "PAID",
+            [Keys.StampSeized] = "SEIZED",
+
             [Keys.On] = "On",
             [Keys.Off] = "Off",
             [Keys.DifficultyLabel] = "Difficulty",
@@ -276,6 +282,9 @@ namespace PawnshopKing.Systems.Localization
             [Keys.HeatRaid] = "פשיטה על השוק השחור — אין מכירות בשוק השחור למשך {0} ימים. (חום -{1})",
             [Keys.VictoryNarrative] = "החוב שירשת הוא היסטוריה. בתוך {0} ימים הפכת חנות גוססת לשלך — מלך העבוט.",
             [Keys.VictoryStats] = "מזומן סופי: ${0}\nמוניטין: {1}   ·   חום: {2}\nמלאי: {3} פריטים על המדפים\nכלים מותקנים: {4}/{5}\nתשלומים שהוחמצו בדרך: {6}",
+
+            [Keys.StampPaid] = "שולם",
+            [Keys.StampSeized] = "הוחרם",
 
             [Keys.On] = "פועל",
             [Keys.Off] = "כבוי",
