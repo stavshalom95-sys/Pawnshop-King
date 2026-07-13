@@ -42,9 +42,25 @@ namespace PawnshopKing.Systems.Audio
         {
             if (source == null) return;
 
+            bool enabled = GameAudioSettings.MusicEnabled;
             source.volume = GameAudioSettings.Music;
-            if (GameAudioSettings.MusicEnabled && !source.isPlaying) source.Play();
-            else if (!GameAudioSettings.MusicEnabled && source.isPlaying) source.Stop();
+            source.mute = !enabled; // the toggle overrides the slider, unconditionally
+            if (enabled && !source.isPlaying) source.Play();
+            else if (!enabled && source.isPlaying) source.Stop();
+        }
+
+        /// <summary>
+        /// Self-correcting watchdog: the on/off state converges every frame even if
+        /// a settings-change notification was lost (stale instance, missed event),
+        /// so the toggle can never be silently ignored again.
+        /// </summary>
+        private void Update()
+        {
+            if (source == null) return;
+
+            bool enabled = GameAudioSettings.MusicEnabled;
+            if (source.isPlaying == enabled && source.mute == !enabled) return;
+            ApplySettings();
         }
 
         /// <summary>
