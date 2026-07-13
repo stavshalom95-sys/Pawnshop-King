@@ -67,26 +67,42 @@ namespace PawnshopKing.UI
         }
 
         private static TMP_FontAsset hebrewFont;
+        private static bool hebrewFontFromProject;
 
         /// <summary>
         /// Hebrew-capable font for localized labels — the TMP default atlas is
         /// Latin-only and would render tofu. Prefers a shipped project font
-        /// (drop a TTF with Hebrew coverage, e.g. Assistant or Heebo, at
-        /// Resources/Fonts/Hebrew.ttf) so every platform renders identically;
-        /// falls back to an OS font with Hebrew coverage. Glyph atlases populate
-        /// dynamically, so no editor-baked TMP asset is required.
+        /// (drop a STATIC-weight TTF with Hebrew coverage, e.g. Assistant or
+        /// Heebo, at Resources/Fonts/Hebrew.ttf) so every platform renders
+        /// identically; falls back to an OS font with Hebrew coverage. Glyph
+        /// atlases populate dynamically, so no editor-baked TMP asset is required.
         /// </summary>
         public static TMP_FontAsset HebrewFont
         {
             get
             {
+#if UNITY_EDITOR
+                // Statics survive play sessions with domain reload disabled, so a
+                // fallback cached before the project TTF existed would stick
+                // forever. While serving a fallback, keep re-checking for the
+                // project font; labels pick it up on their next refresh.
+                if (hebrewFont != null && !hebrewFontFromProject)
+                {
+                    var lateProjectFont = TryCreateProjectHebrewFont();
+                    if (lateProjectFont != null)
+                    {
+                        hebrewFont = lateProjectFont;
+                        hebrewFontFromProject = true;
+                    }
+                }
+#endif
                 if (hebrewFont != null) return hebrewFont;
 
-                var projectFont = Resources.Load<Font>("Fonts/Hebrew");
-                if (projectFont != null)
+                hebrewFont = TryCreateProjectHebrewFont();
+                if (hebrewFont != null)
                 {
-                    hebrewFont = TMP_FontAsset.CreateFontAsset(projectFont);
-                    if (hebrewFont != null) return hebrewFont;
+                    hebrewFontFromProject = true;
+                    return hebrewFont;
                 }
 
                 foreach (var name in new[] { "Segoe UI", "Arial", "Tahoma" })
@@ -95,12 +111,23 @@ namespace PawnshopKing.UI
                     if (osFont == null) continue;
 
                     hebrewFont = TMP_FontAsset.CreateFontAsset(osFont);
-                    if (hebrewFont != null) return hebrewFont;
+                    if (hebrewFont != null)
+                    {
+                        Debug.LogWarning("[UITheme] Using OS font fallback for Hebrew — drop a static-weight TTF at Resources/Fonts/Hebrew.ttf for consistent cross-platform rendering.");
+                        return hebrewFont;
+                    }
                 }
 
+                Debug.LogWarning("[UITheme] No Hebrew-capable font found — Hebrew text will render as boxes. Add Resources/Fonts/Hebrew.ttf.");
                 hebrewFont = TMP_Settings.defaultFontAsset;
                 return hebrewFont;
             }
+        }
+
+        private static TMP_FontAsset TryCreateProjectHebrewFont()
+        {
+            var projectFont = Resources.Load<Font>("Fonts/Hebrew");
+            return projectFont != null ? TMP_FontAsset.CreateFontAsset(projectFont) : null;
         }
 
         /// <summary>
