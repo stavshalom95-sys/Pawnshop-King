@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using PawnshopKing.Core;
@@ -60,6 +61,14 @@ namespace PawnshopKing.UI
         private TMP_InputField offerInput;
         private TextMeshProUGUI buyLabel;
         private TextMeshProUGUI dealFeedbackText;
+
+        // Armed Offer state: Offer pressed with nothing to submit pulses the button
+        // and hands focus to the input instead of dead-clicking (GDD 32.2 feedback).
+        private const string OfferArmHint = "Type your offer — press Enter or hit Offer again.";
+        private Image offerButtonImage;
+        private Coroutine offerPulse;
+        private bool offerArmed;
+        private int offerArmedFrame;
 
         private CustomerInstance currentCustomer;
         private CustomerArchetypeDefinition currentArchetype;
@@ -157,6 +166,7 @@ namespace PawnshopKing.UI
             customerNameText.text = "Shop is open";
             customerMoodText.text = string.Empty;
             customerDialogueText.text = "Waiting for the first customer...";
+            DisarmOffer();
             ClearItemRows();
             dealControls.SetActive(false);
             dealFeedbackText.text = string.Empty;
@@ -175,6 +185,7 @@ namespace PawnshopKing.UI
             UpdateMoodAskingLine();
             RebuildItemRows(customer);
 
+            DisarmOffer();
             offerInput.text = string.Empty;
             bool tradable = customer.items.Count > 0;
             dealControls.SetActive(tradable);
@@ -195,6 +206,7 @@ namespace PawnshopKing.UI
             customerNameText.text = "Shop closed";
             customerMoodText.text = string.Empty;
             customerDialogueText.text = $"Day {day} is over. The debt clock ticks on.";
+            DisarmOffer();
             ClearItemRows();
             dealControls.SetActive(false);
             dealFeedbackText.text = string.Empty;
@@ -211,15 +223,18 @@ namespace PawnshopKing.UI
             var selection = SelectedItems();
             if (selection.Count == 0)
             {
+                DisarmOffer();
                 dealFeedbackText.text = "Check at least one item to deal on.";
                 return;
             }
 
             if (!int.TryParse(offerInput.text, out int amount) || amount <= 0)
             {
-                dealFeedbackText.text = "Enter an offer amount first.";
+                ArmOffer();
                 return;
             }
+
+            DisarmOffer();
 
             if (amount > gm.State.cash)
             {
@@ -280,6 +295,7 @@ namespace PawnshopKing.UI
         {
             if (!InNegotiation()) return;
 
+            DisarmOffer();
             NegotiationSystem.Reject(currentCustomer);
             dealFeedbackText.text = "You wave them off. They take their goods elsewhere.";
             ConcludeVisit();
@@ -312,8 +328,67 @@ namespace PawnshopKing.UI
         private string LeftoverSuffix() =>
             currentCustomer.items.Count > 0 ? " They pocket what you passed on." : string.Empty;
 
+        // ---- Armed Offer state ----------------------------------------------
+
+        /// <summary>
+        /// Offer pressed with nothing to submit: pulse the button gold and hand
+        /// focus to the amount field so typing can start without another click.
+        /// </summary>
+        private void ArmOffer()
+        {
+            dealFeedbackText.text = OfferArmHint;
+            offerArmedFrame = Time.frameCount;
+            offerInput.Select();
+            offerInput.ActivateInputField();
+
+            if (offerArmed) return;
+            offerArmed = true;
+            offerPulse = StartCoroutine(OfferPulseRoutine());
+        }
+
+        private void DisarmOffer()
+        {
+            if (offerPulse != null)
+            {
+                StopCoroutine(offerPulse);
+                offerPulse = null;
+            }
+
+            offerArmed = false;
+            if (offerButtonImage != null) offerButtonImage.color = ButtonColor;
+            if (dealFeedbackText.text == OfferArmHint) dealFeedbackText.text = string.Empty;
+        }
+
+        /// <summary>Slow gold pulse — same family as the cash figures, unmistakably not the neutral cyan.</summary>
+        private IEnumerator OfferPulseRoutine()
+        {
+            while (true)
+            {
+                float wave = (Mathf.Sin(Time.unscaledTime * (2f * Mathf.PI / UITheme.FocusPulsePeriod)) + 1f) * 0.5f;
+                offerButtonImage.color = Color.Lerp(UITheme.Gold, UITheme.GoldBright, wave);
+                yield return null;
+            }
+        }
+
+        /// <summary>Focus left the amount field: clicking away cancels the armed state.</summary>
+        private void OnOfferInputEndEdit()
+        {
+            if (!offerArmed) return;
+
+            // Arming re-focuses the field in the same frame TMP deactivates it
+            // (Enter on an empty field) — restore focus instead of disarming.
+            if (Time.frameCount == offerArmedFrame)
+            {
+                offerInput.ActivateInputField();
+                return;
+            }
+
+            DisarmOffer();
+        }
+
         private void ConcludeVisit()
         {
+            DisarmOffer();
             ClearItemRows();
             dealControls.SetActive(false);
             customerMoodText.text = $"Mood: {currentCustomer.mood}";
@@ -714,7 +789,12 @@ namespace PawnshopKing.UI
             layout.childForceExpandHeight = false;
 
             offerInput = CreateOfferInput(dealControls.transform);
-            CreateSmallButton(dealControls.transform, "Offer", 110f, OnOfferClicked);
+            offerInput.onSubmit.AddListener(_ => OnOfferClicked());
+            offerInput.onEndEdit.AddListener(_ => OnOfferInputEndEdit());
+
+            var offerLabel = CreateSmallButton(dealControls.transform, "Offer", 110f, OnOfferClicked);
+            offerButtonImage = offerLabel.transform.parent.GetComponent<Image>();
+
             buyLabel = CreateSmallButton(dealControls.transform, "Buy", 190f, OnBuyClicked);
             CreateSmallButton(dealControls.transform, "Reject", 110f, OnRejectClicked);
 
