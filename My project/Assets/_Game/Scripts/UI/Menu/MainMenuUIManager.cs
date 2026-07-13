@@ -41,6 +41,8 @@ namespace PawnshopKing.UI
             if (Instance == this) Instance = null;
         }
 
+        public bool IsVisible => screenRoot != null && screenRoot.activeSelf;
+
         public void Show()
         {
             RefreshButtons();
