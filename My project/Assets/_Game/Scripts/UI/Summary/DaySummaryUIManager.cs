@@ -1,5 +1,6 @@
 using System.Text;
 using PawnshopKing.Core;
+using PawnshopKing.Systems.Localization;
 using PawnshopKing.Systems.Upgrades;
 using TMPro;
 using UnityEngine;
@@ -33,11 +34,18 @@ namespace PawnshopKing.UI
 
             BuildScreen();
             gm.PhaseChanged += OnPhaseChanged;
+            LanguageManager.LanguageChanged += OnLanguageChanged;
         }
 
         private void OnDestroy()
         {
             if (gm != null) gm.PhaseChanged -= OnPhaseChanged;
+            LanguageManager.LanguageChanged -= OnLanguageChanged;
+        }
+
+        private void OnLanguageChanged()
+        {
+            if (screenRoot.activeSelf) Show(gm.Phase);
         }
 
         private void OnPhaseChanged(GamePhase phase)
@@ -61,9 +69,10 @@ namespace PawnshopKing.UI
             bool gameOver = phase == GamePhase.GameOver;
             bool victory = phase == GamePhase.Victory;
 
-            titleText.text = gameOver ? "GAME OVER"
-                : victory ? "CAMPAIGN COMPLETE"
-                : $"Day {s.currentDay} — Closing Time";
+            string title = gameOver ? Loc.T(LanguageManager.Keys.GameOver).ToUpperInvariant()
+                : victory ? Loc.T(LanguageManager.Keys.Victory).ToUpperInvariant()
+                : Loc.F(LanguageManager.Keys.DayClosing, s.currentDay);
+            Loc.Set(titleText, title, UITheme.HeaderFont);
             titleText.color = gameOver ? UITheme.Danger
                 : victory ? UITheme.Gold
                 : HUDUIManager.TextColor;
@@ -86,7 +95,9 @@ namespace PawnshopKing.UI
             }
 
             bodyText.text = sb.ToString();
-            continueLabel.text = gameOver || victory ? "New Campaign" : $"Open Day {s.currentDay + 1}";
+            Loc.Set(continueLabel, gameOver || victory
+                ? Loc.T(LanguageManager.Keys.NewCampaign)
+                : Loc.F(LanguageManager.Keys.OpenDay, s.currentDay + 1));
             screenRoot.SetActive(true);
             UIFx.FadeIn(this, screenRoot);
         }

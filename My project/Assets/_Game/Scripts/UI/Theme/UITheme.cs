@@ -66,30 +66,40 @@ namespace PawnshopKing.UI
             }
         }
 
-        private static TMP_FontAsset rtlBodyFont;
+        private static TMP_FontAsset hebrewFont;
 
         /// <summary>
-        /// Dynamic OS font with Hebrew coverage for the onboarding tips — the TMP
-        /// default atlas is Latin-only and would render tofu. Glyphs populate on
-        /// demand, so no pre-baked atlas asset is needed (zero-editor-wiring).
+        /// Hebrew-capable font for localized labels — the TMP default atlas is
+        /// Latin-only and would render tofu. Prefers a shipped project font
+        /// (drop a TTF with Hebrew coverage, e.g. Assistant or Heebo, at
+        /// Resources/Fonts/Hebrew.ttf) so every platform renders identically;
+        /// falls back to an OS font with Hebrew coverage. Glyph atlases populate
+        /// dynamically, so no editor-baked TMP asset is required.
         /// </summary>
-        public static TMP_FontAsset RtlBodyFont
+        public static TMP_FontAsset HebrewFont
         {
             get
             {
-                if (rtlBodyFont != null) return rtlBodyFont;
+                if (hebrewFont != null) return hebrewFont;
+
+                var projectFont = Resources.Load<Font>("Fonts/Hebrew");
+                if (projectFont != null)
+                {
+                    hebrewFont = TMP_FontAsset.CreateFontAsset(projectFont);
+                    if (hebrewFont != null) return hebrewFont;
+                }
 
                 foreach (var name in new[] { "Segoe UI", "Arial", "Tahoma" })
                 {
                     var osFont = Font.CreateDynamicFontFromOSFont(name, 32);
                     if (osFont == null) continue;
 
-                    rtlBodyFont = TMP_FontAsset.CreateFontAsset(osFont);
-                    if (rtlBodyFont != null) return rtlBodyFont;
+                    hebrewFont = TMP_FontAsset.CreateFontAsset(osFont);
+                    if (hebrewFont != null) return hebrewFont;
                 }
 
-                rtlBodyFont = TMP_Settings.defaultFontAsset;
-                return rtlBodyFont;
+                hebrewFont = TMP_Settings.defaultFontAsset;
+                return hebrewFont;
             }
         }
 
