@@ -397,6 +397,9 @@ namespace PawnshopKing.UI
             row.selectToggle.isOn = true;
             row.selectToggle.onValueChanged.AddListener(_ => OnSelectionChanged());
 
+            // Category glyph so the item reads at a glance, before the name does.
+            UIIcons.CreateIconChip(rowGO.transform, ItemGenerator.GetDefinition(item.definitionId));
+
             row.infoText = CreateText(rowGO.transform, "Info", 20f, TextAlignmentOptions.Left);
             row.infoText.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
 
