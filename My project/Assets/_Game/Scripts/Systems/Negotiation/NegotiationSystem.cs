@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using PawnshopKing.Data;
 using PawnshopKing.Data.Definitions;
 using PawnshopKing.Data.Runtime;
+using PawnshopKing.Systems.DifficultyTier;
 using UnityEngine;
 
 namespace PawnshopKing.Systems.Negotiation
@@ -48,8 +49,9 @@ namespace PawnshopKing.Systems.Negotiation
             if (totalValue <= 0) return 0;
 
             float factor = Mathf.Clamp(
-                0.5f + 0.45f * customer.greed + 0.2f * (1f - customer.honesty) - 0.3f * customer.desperation,
-                0.35f, 1.2f);
+                0.5f + 0.45f * customer.greed + 0.2f * (1f - customer.honesty) - 0.3f * customer.desperation
+                    + DifficultyTuning.AskFactorShift,
+                0.3f, 1.3f);
 
             // Asks are quoted in $25 steps so subset re-quotes stay too coarse to
             // read exact per-item values off the price deltas.
@@ -103,7 +105,9 @@ namespace PawnshopKing.Systems.Negotiation
             float ratio = offer / (float)customer.askingPrice;
 
             // The fraction of the current ask they'd quietly settle for.
-            float settleLine = Mathf.Clamp(0.9f - 0.4f * customer.desperation + 0.25f * customer.greed, 0.5f, 1f);
+            float settleLine = Mathf.Clamp(
+                0.9f - 0.4f * customer.desperation + 0.25f * customer.greed + DifficultyTuning.SettleLineShift,
+                0.45f, 1f);
             if (ratio >= settleLine && Random.value < 0.65f + (ratio - settleLine) * 2f)
             {
                 return CloseDeal(state, customer, archetype, selection, offer, OfferOutcome.Accepted);

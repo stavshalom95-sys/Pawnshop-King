@@ -107,6 +107,29 @@ namespace PawnshopKing.Systems.Localization
             public const string TipInspect = "tip_inspect";
             public const string TipOpenLow = "tip_open_low";
             public const string TipHaggle = "tip_haggle";
+
+            public const string SummaryProfitToday = "summary_profit";     // {0} = colored delta
+            public const string SummaryReputation = "summary_reputation";  // {0} = delta, {1} = now
+            public const string SummaryHeat = "summary_heat";              // {0} = delta, {1} = now
+            public const string DebtRemaining = "debt_remaining";          // {0} = amount
+            public const string DebtClear = "debt_clear";
+            public const string DebtNext = "debt_next";                    // {0} = amount, {1} = days
+            public const string DebtPaid = "debt_paid";                    // {0} paid, {1} remains, {2} next, {3} days
+            public const string DebtFinal = "debt_final";                  // {0} = amount
+            public const string DebtSeized = "debt_seized";                // {0} = amount, {1} = items
+            public const string DebtNoAssets = "debt_no_assets";           // {0} = amount
+            public const string Bankrupt = "bankrupt";
+            public const string HeatPoliceSeized = "heat_police_seized";   // {0} = items, {1} = heat relief
+            public const string HeatPoliceClean = "heat_police_clean";     // {0} = heat relief
+            public const string HeatRaid = "heat_raid";                    // {0} = days, {1} = heat relief
+            public const string VictoryNarrative = "victory_narrative";    // {0} = days
+            public const string VictoryStats = "victory_stats";            // cash, rep, heat, items, tools, total, missed
+
+            public const string On = "on";
+            public const string Off = "off";
+            public const string DifficultyLabel = "difficulty";
+            public const string DifficultyEasy = "difficulty_easy";
+            public const string DifficultyHard = "difficulty_hard";
         }
 
         private static readonly Dictionary<string, string> English = new Dictionary<string, string>
@@ -160,6 +183,29 @@ namespace PawnshopKing.Systems.Localization
             [Keys.TipInspect] = "Inspect an item before you buy it.",
             [Keys.TipOpenLow] = "Offer below the asking price — haggling is the whole profit.",
             [Keys.TipHaggle] = "Haggle again, buy at their price, or reject.",
+
+            [Keys.SummaryProfitToday] = "Total profit today:  {0}",
+            [Keys.SummaryReputation] = "Reputation:  {0}   (now {1})",
+            [Keys.SummaryHeat] = "Heat:  {0}   (now {1})",
+            [Keys.DebtRemaining] = "Debt remaining: ${0}",
+            [Keys.DebtClear] = "You owe nothing. The shop is yours.",
+            [Keys.DebtNext] = "Next payment: ${0} in {1} day(s).",
+            [Keys.DebtPaid] = "Debt payment of ${0} made. ${1} remains — next payment ${2} in {3} days.",
+            [Keys.DebtFinal] = "Final payment of ${0} made. The inherited debt is PAID OFF.",
+            [Keys.DebtSeized] = "You couldn't cover the ${0} payment. Creditors seized {1} item(s) at rock-bottom prices. Debt penalty +10%. (Reputation -2)",
+            [Keys.DebtNoAssets] = "The ${0} payment came due and there was nothing left to take. The shop is finished.",
+            [Keys.Bankrupt] = "No cash and nothing left to sell — the shop is bankrupt.",
+            [Keys.HeatPoliceSeized] = "POLICE VISIT — Officers seized {0} stolen item(s). No compensation. (Reputation -2, Heat -{1})",
+            [Keys.HeatPoliceClean] = "POLICE VISIT — Officers turned the shop over and left empty-handed. (Heat -{0})",
+            [Keys.HeatRaid] = "BLACK MARKET RAID — No black market sales for {0} days. (Heat -{1})",
+            [Keys.VictoryNarrative] = "The inherited debt is history. In {0} days you turned a dying shop into your own — the Pawnshop King.",
+            [Keys.VictoryStats] = "Final cash: ${0}\nReputation: {1}   ·   Heat: {2}\nInventory: {3} item(s) still on the shelves\nTools installed: {4}/{5}\nPayments missed along the way: {6}",
+
+            [Keys.On] = "On",
+            [Keys.Off] = "Off",
+            [Keys.DifficultyLabel] = "Difficulty",
+            [Keys.DifficultyEasy] = "Easy",
+            [Keys.DifficultyHard] = "Hard",
         };
 
         private static readonly Dictionary<string, string> Hebrew = new Dictionary<string, string>
@@ -213,6 +259,29 @@ namespace PawnshopKing.Systems.Localization
             [Keys.TipInspect] = "לחץ על 'בדוק' כדי לבדוק את החפץ לפני שקונים",
             [Keys.TipOpenLow] = "הצע פחות מהמחיר המבוקש — מיקוח הוא כל הרווח",
             [Keys.TipHaggle] = "אפשר להתמקח שוב, לקנות במחיר המבוקש או לסרב",
+
+            [Keys.SummaryProfitToday] = "רווח כולל היום:  {0}",
+            [Keys.SummaryReputation] = "מוניטין:  {0}   (כעת {1})",
+            [Keys.SummaryHeat] = "חום משטרתי:  {0}   (כעת {1})",
+            [Keys.DebtRemaining] = "חוב שנותר: ${0}",
+            [Keys.DebtClear] = "אין לך חובות. החנות שלך.",
+            [Keys.DebtNext] = "התשלום הבא: ${0} בעוד {1} ימים.",
+            [Keys.DebtPaid] = "שולם תשלום חוב של ${0}. נותרו ${1} — התשלום הבא ${2} בעוד {3} ימים.",
+            [Keys.DebtFinal] = "התשלום האחרון של ${0} בוצע. החוב שולם במלואו!",
+            [Keys.DebtSeized] = "לא הצלחת לכסות את התשלום של ${0}. הנושים החרימו {1} פריטים במחירי רצפה. קנס חוב +10%. (מוניטין -2)",
+            [Keys.DebtNoAssets] = "הגיע מועד התשלום של ${0} ולא נשאר מה לקחת. החנות אבודה.",
+            [Keys.Bankrupt] = "אין מזומן ואין מה למכור — החנות פשטה רגל.",
+            [Keys.HeatPoliceSeized] = "ביקור משטרה — שוטרים החרימו {0} פריטים גנובים. ללא פיצוי. (מוניטין -2, חום -{1})",
+            [Keys.HeatPoliceClean] = "ביקור משטרה — השוטרים הפכו את החנות ויצאו בידיים ריקות. (חום -{0})",
+            [Keys.HeatRaid] = "פשיטה על השוק השחור — אין מכירות בשוק השחור למשך {0} ימים. (חום -{1})",
+            [Keys.VictoryNarrative] = "החוב שירשת הוא היסטוריה. בתוך {0} ימים הפכת חנות גוססת לשלך — מלך העבוט.",
+            [Keys.VictoryStats] = "מזומן סופי: ${0}\nמוניטין: {1}   ·   חום: {2}\nמלאי: {3} פריטים על המדפים\nכלים מותקנים: {4}/{5}\nתשלומים שהוחמצו בדרך: {6}",
+
+            [Keys.On] = "פועל",
+            [Keys.Off] = "כבוי",
+            [Keys.DifficultyLabel] = "רמת קושי",
+            [Keys.DifficultyEasy] = "קל",
+            [Keys.DifficultyHard] = "קשה",
         };
     }
 }

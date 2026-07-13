@@ -12,6 +12,7 @@ namespace PawnshopKing.Systems.Audio
         private const string MasterKey = "volume_master";
         private const string SfxKey = "volume_sfx";
         private const string MusicKey = "volume_music";
+        private const string MusicEnabledKey = "music_enabled";
 
         public static float Master
         {
@@ -28,13 +29,20 @@ namespace PawnshopKing.Systems.Audio
         public static float Music
         {
             get => PlayerPrefs.GetFloat(MusicKey, 1f);
-            set => PlayerPrefs.SetFloat(MusicKey, Mathf.Clamp01(value));
+            set { PlayerPrefs.SetFloat(MusicKey, Mathf.Clamp01(value)); Apply(); }
+        }
+
+        public static bool MusicEnabled
+        {
+            get => PlayerPrefs.GetInt(MusicEnabledKey, 1) == 1;
+            set { PlayerPrefs.SetInt(MusicEnabledKey, value ? 1 : 0); Apply(); }
         }
 
         /// <summary>Pushes the stored settings onto the live audio state. Call once at boot.</summary>
         public static void Apply()
         {
             AudioListener.volume = Master;
+            MusicManager.Instance?.ApplySettings();
         }
     }
 }

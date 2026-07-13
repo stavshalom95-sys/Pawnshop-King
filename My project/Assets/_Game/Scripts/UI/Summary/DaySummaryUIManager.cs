@@ -78,28 +78,64 @@ namespace PawnshopKing.UI
                 : HUDUIManager.TextColor;
 
             var sb = new StringBuilder();
-            sb.Append($"Profit / Loss:  {Delta(s.cash - s.dayStartCash, "$")}");
-            sb.Append($"\nReputation:  {Delta(s.reputation - s.dayStartReputation)}   (now {s.reputation})");
-            sb.Append($"\nHeat:  {Delta(s.heat - s.dayStartHeat)}   (now {s.heat})");
-            sb.Append($"\n\n<color=#C9B458>{gm.Day.LastDebtResult.message}</color>");
+            sb.Append(Loc.F(LanguageManager.Keys.SummaryProfitToday, Delta(s.cash - s.dayStartCash, "$")));
+            sb.Append("\n" + Loc.F(LanguageManager.Keys.SummaryReputation, Delta(s.reputation - s.dayStartReputation), s.reputation));
+            sb.Append("\n" + Loc.F(LanguageManager.Keys.SummaryHeat, Delta(s.heat - s.dayStartHeat), s.heat));
+            sb.Append($"\n\n<color=#C9B458>{DebtLine(gm.Day.LastDebtResult, s)}</color>");
 
             if (gm.Day.LastHeatEvent.occurred)
             {
-                sb.Append($"\n<color=#C05B4D>{gm.Day.LastHeatEvent.message}</color>");
+                sb.Append($"\n<color=#C05B4D>{HeatLine(gm.Day.LastHeatEvent)}</color>");
             }
 
             if (victory) AppendFinalStats(sb, s);
             else if (!gameOver && s.debt.totalDebt > 0)
             {
-                sb.Append($"\n<size=85%><color=#9E9A90>Debt remaining: ${s.debt.totalDebt:N0}</color></size>");
+                sb.Append($"\n<size=85%><color=#9E9A90>{Loc.F(LanguageManager.Keys.DebtRemaining, s.debt.totalDebt.ToString("N0"))}</color></size>");
             }
 
-            bodyText.text = sb.ToString();
+            bodyText.alignment = LanguageManager.IsRtl ? TextAlignmentOptions.TopRight : TextAlignmentOptions.TopLeft;
+            Loc.Set(bodyText, sb.ToString());
             Loc.Set(continueLabel, gameOver || victory
                 ? Loc.T(LanguageManager.Keys.NewCampaign)
                 : Loc.F(LanguageManager.Keys.OpenDay, s.currentDay + 1));
             screenRoot.SetActive(true);
             UIFx.FadeIn(this, screenRoot);
+        }
+
+        /// <summary>Localized debt verdict composed from the tick's structured fields, not its English message.</summary>
+        private static string DebtLine(Systems.Debt.DebtTickResult result, Data.Runtime.GameState s)
+        {
+            if (result.bankrupt) return Loc.T(LanguageManager.Keys.Bankrupt);
+            if (result.gameOver) return Loc.F(LanguageManager.Keys.DebtNoAssets, result.amountDue.ToString("N0"));
+            if (result.debtCleared) return Loc.F(LanguageManager.Keys.DebtFinal, result.amountPaid.ToString("N0"));
+            if (result.forcedSale && result.paid)
+            {
+                return Loc.F(LanguageManager.Keys.DebtSeized, result.amountDue.ToString("N0"), result.itemsSeized);
+            }
+
+            if (result.paid)
+            {
+                return Loc.F(LanguageManager.Keys.DebtPaid, result.amountPaid.ToString("N0"),
+                    s.debt.totalDebt.ToString("N0"), s.debt.nextPaymentAmount.ToString("N0"), s.debt.daysUntilPayment);
+            }
+
+            return s.debt.totalDebt > 0
+                ? Loc.F(LanguageManager.Keys.DebtNext, s.debt.nextPaymentAmount.ToString("N0"), s.debt.daysUntilPayment)
+                : Loc.T(LanguageManager.Keys.DebtClear);
+        }
+
+        private static string HeatLine(Systems.Events.HeatEventResult heat)
+        {
+            if (heat.blackMarketRaided)
+            {
+                return Loc.F(LanguageManager.Keys.HeatRaid,
+                    Systems.Events.HeatEventSystem.RaidShutdownDays, Systems.Events.HeatEventSystem.RaidHeatRelief);
+            }
+
+            return heat.itemsSeized > 0
+                ? Loc.F(LanguageManager.Keys.HeatPoliceSeized, heat.itemsSeized, Systems.Events.HeatEventSystem.PoliceHeatRelief)
+                : Loc.F(LanguageManager.Keys.HeatPoliceClean, Systems.Events.HeatEventSystem.PoliceHeatRelief);
         }
 
         /// <summary>The victory ledger (GDD 27.2): the inherited debt is paid — final campaign stats.</summary>
@@ -111,13 +147,10 @@ namespace PawnshopKing.UI
                 if (UpgradeSystem.IsOwned(s, upgrade.id)) toolCount++;
             }
 
-            sb.Append($"\n\nThe inherited debt is history. In {s.currentDay} day{(s.currentDay == 1 ? "" : "s")} you turned a dying shop into your own — <color=#D4A029>the Pawnshop King</color>.");
+            sb.Append("\n\n" + Loc.F(LanguageManager.Keys.VictoryNarrative, s.currentDay));
             sb.Append("\n\n<size=90%>");
-            sb.Append($"Final cash:  ${s.cash:N0}");
-            sb.Append($"\nReputation:  {s.reputation}   ·   Heat:  {s.heat}");
-            sb.Append($"\nInventory:  {s.inventory.Count} item{(s.inventory.Count == 1 ? "" : "s")} still on the shelves");
-            sb.Append($"\nTools installed:  {toolCount}/{UpgradeSystem.AllUpgrades.Count}");
-            sb.Append($"\nPayments missed along the way:  {s.debt.missedPayments}");
+            sb.Append(Loc.F(LanguageManager.Keys.VictoryStats, s.cash.ToString("N0"), s.reputation, s.heat,
+                s.inventory.Count, toolCount, UpgradeSystem.AllUpgrades.Count, s.debt.missedPayments));
             sb.Append("</size>");
         }
 

@@ -12,6 +12,7 @@ namespace PawnshopKing.Data.Runtime
     public class GameState
     {
         public int currentDay = 1;
+        public Difficulty difficulty = Difficulty.Easy;
 
         // Core resources (GDD 8.1)
         public int cash;

@@ -38,6 +38,10 @@ namespace PawnshopKing.Core
 
             root.AddComponent<GameManager>();
 
+            // Audio before the UI, so button wiring can find the managers.
+            root.AddComponent<Systems.Audio.AudioManager>();
+            root.AddComponent<Systems.Audio.MusicManager>();
+
             // UI after GameManager (they grab the instance in Awake), before GameBootstrap
             // so the HUD is subscribed before Start auto-launches the campaign.
             root.AddComponent<UI.HUDUIManager>();

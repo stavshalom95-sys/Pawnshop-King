@@ -23,6 +23,13 @@ namespace PawnshopKing.UI
         {
             button = GetComponent<Button>();
             baseScale = transform.localScale;
+
+            // Every code-built button carries ButtonFX, so this one hook gives the
+            // whole UI a click sound (routed through the SFX volume setting).
+            if (button != null)
+            {
+                button.onClick.AddListener(() => Systems.Audio.AudioManager.Instance?.PlayClick());
+            }
         }
 
         private void OnDisable()

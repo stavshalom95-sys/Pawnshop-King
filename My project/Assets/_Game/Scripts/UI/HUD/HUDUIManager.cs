@@ -267,10 +267,12 @@ namespace PawnshopKing.UI
             switch (result.outcome)
             {
                 case OfferOutcome.Accepted:
+                    Systems.Audio.AudioManager.Instance?.PlayAccept();
                     dealFeedbackText.text = $"Deal. You hand over ${result.price:N0}.{LeftoverSuffix()}";
                     ConcludeVisit();
                     break;
                 case OfferOutcome.AcceptedReluctantly:
+                    Systems.Audio.AudioManager.Instance?.PlayAccept();
                     dealFeedbackText.text = $"“Fine. Just give me the money.” You pay ${result.price:N0}.{LeftoverSuffix()}";
                     ConcludeVisit();
                     break;
@@ -281,10 +283,12 @@ namespace PawnshopKing.UI
                     UpdateTip();
                     break;
                 case OfferOutcome.OffendedLeft:
+                    Systems.Audio.AudioManager.Instance?.PlayReject();
                     dealFeedbackText.text = "“Insulting.” They storm out. Word gets around. (Reputation -1)";
                     ConcludeVisit();
                     break;
                 case OfferOutcome.GaveUpLeft:
+                    Systems.Audio.AudioManager.Instance?.PlayReject();
                     dealFeedbackText.text = "“Forget it.” They pack up and leave.";
                     ConcludeVisit();
                     break;
@@ -309,6 +313,7 @@ namespace PawnshopKing.UI
             }
 
             var result = NegotiationSystem.BuyAtAskingPrice(gm.State, currentCustomer, currentArchetype, selection);
+            Systems.Audio.AudioManager.Instance?.PlayAccept();
             dealFeedbackText.text = $"Bought at asking price — ${result.price:N0}. Fair dealing. (Reputation +1){LeftoverSuffix()}";
             ConcludeVisit();
         }
@@ -318,6 +323,7 @@ namespace PawnshopKing.UI
             if (!InNegotiation()) return;
 
             DisarmOffer();
+            Systems.Audio.AudioManager.Instance?.PlayReject();
             NegotiationSystem.Reject(currentCustomer);
             dealFeedbackText.text = "You wave them off. They take their goods elsewhere.";
             ConcludeVisit();

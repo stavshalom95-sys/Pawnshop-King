@@ -7,4 +7,11 @@ namespace PawnshopKing.Data
         Collector,
         BlackMarket
     }
+
+    /// <summary>Campaign difficulty — part of GameState so it saves with the run.</summary>
+    public enum Difficulty
+    {
+        Easy,
+        Hard
+    }
 }

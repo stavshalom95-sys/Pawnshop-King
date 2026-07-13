@@ -140,11 +140,14 @@ namespace PawnshopKing.UI
         /// </summary>
         public static string PrepareRtl(string text)
         {
+            // Rich-text tags (<color=...>, <size=...>) match first and pass through
+            // untouched — reversing their contents would break TMP's parser.
             return System.Text.RegularExpressions.Regex.Replace(
                 text,
-                "[A-Za-z0-9][A-Za-z0-9 ]*[A-Za-z0-9]|[A-Za-z0-9]",
+                "<[^>]*>|[A-Za-z0-9][A-Za-z0-9 ]*[A-Za-z0-9]|[A-Za-z0-9]",
                 match =>
                 {
+                    if (match.Value[0] == '<') return match.Value;
                     var chars = match.Value.ToCharArray();
                     System.Array.Reverse(chars);
                     return new string(chars);

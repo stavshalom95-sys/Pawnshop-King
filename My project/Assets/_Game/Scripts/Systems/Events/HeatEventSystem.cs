@@ -27,9 +27,9 @@ namespace PawnshopKing.Systems.Events
         public const int HeatThreshold = 50;
         private const float BaseEventChance = 0.25f;
         private const float ChancePerHeatPoint = 0.01f;    // +1% per point above threshold
-        private const int PoliceHeatRelief = 20;
-        private const int RaidHeatRelief = 10;
-        private const int RaidShutdownDays = 3;
+        public const int PoliceHeatRelief = 20;
+        public const int RaidHeatRelief = 10;
+        public const int RaidShutdownDays = 3;
 
         public static HeatEventResult ProcessEndOfDay(GameState state)
         {
