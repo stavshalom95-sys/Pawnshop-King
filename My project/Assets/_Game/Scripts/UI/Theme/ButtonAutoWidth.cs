@@ -15,6 +15,20 @@ namespace PawnshopKing.UI
     /// music-toggle fix), only re-measuring TMP's actual preferred width when
     /// the string changed. Width only ever grows past the requested minimum,
     /// never shrinks below it.
+    ///
+    /// First measurement runs from OnEnable, not from Attach itself. Screens
+    /// like Inventory/Upgrades rebuild their button rows while the screen root
+    /// is still inactive (RebuildList runs before SetActive(true) in Open()) —
+    /// Unity defers Awake/OnEnable for every component added under an inactive
+    /// ancestor, including the label's own TextMeshProUGUI, until the hierarchy
+    /// activates. Measuring immediately at Attach time called GetPreferredValues
+    /// on a label that hadn't been through its own Awake yet and threw a
+    /// NullReferenceException. OnEnable is guaranteed by Unity to fire only once
+    /// the object is truly active — and since this component is always added
+    /// after the label's TextMeshProUGUI, its OnEnable also always runs after
+    /// TMP's own, so the label is fully initialized either way: immediately, if
+    /// the hierarchy was already active when Attach was called, or deferred
+    /// until SetActive(true), if it wasn't.
     /// </summary>
     public class ButtonAutoWidth : MonoBehaviour
     {
@@ -31,8 +45,9 @@ namespace PawnshopKing.UI
             watcher.label = label;
             watcher.layoutElement = layoutElement;
             watcher.minWidth = minWidth;
-            watcher.Refresh();
         }
+
+        private void OnEnable() => Refresh();
 
         private void Update() => Refresh();
 
