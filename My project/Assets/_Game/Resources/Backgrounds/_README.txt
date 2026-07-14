@@ -1,21 +1,27 @@
 Shop background drop folder
 ============================
 
-Drop the room art here named exactly:
+The room now has four stock-level variants that cross-fade as the
+player's inventory fills up. Drop each one here named exactly:
 
-    Shop.jpeg
+    Shop_Empty.jpeg      0 items
+    Shop_Sparse.jpeg     1-3 items
+    Shop_Stocked.jpeg    4-9 items
+    Shop_Full.jpeg       10+ items
 
-(or .png/.jpg — if you change the extension, update
-BackgroundResourcePath in ShopSceneBackdrop.cs to match, since
-Resources.Load looks up the name without an extension.)
+(thresholds are StockedAtCount / FullAtCount consts in
+ShopSceneBackdrop.cs — retune there if a different pacing feels better
+once you've seen real play sessions)
 
-The image imports as a UI sprite automatically and displays full-bleed
-behind every screen using a "cover" fit: it always fills the frame
-without distortion, cropping the edges as needed on aspect ratios other
-than the source image's own (currently authored at 1248x832, 3:2).
-Keep the important content — the counter and its surroundings —
-centered, since wider or narrower screens crop the top/bottom or
-left/right symmetrically around the center.
+Any missing variant falls back to a single "Shop.jpeg" if present, so
+you can drop the four in over time without breaking the scene. Every
+file imports as a UI sprite automatically and displays full-bleed using
+a "cover" fit: it always fills the frame without distortion, cropping
+the edges as needed on aspect ratios other than the source art's own
+(currently authored at 1248x832, 3:2). Keep the important content —
+the counter and its surroundings — centered, since wider or narrower
+screens crop symmetrically around the center.
 
-Swapping the file replaces the room immediately on the next play
-session — no code changes needed.
+Crossfades run over 2 seconds (CrossfadeDuration) whenever the player's
+item count crosses a threshold. Swapping any file replaces that stock
+level's image on the next play session — no code changes needed.

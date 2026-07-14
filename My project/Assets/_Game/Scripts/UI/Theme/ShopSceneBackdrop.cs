@@ -6,26 +6,38 @@ using UnityEngine.UI;
 namespace PawnshopKing.UI
 {
     /// <summary>
-    /// The living shop behind the HUD (canvas below everything): the authored room
-    /// photo (Resources/Backgrounds), a subtle readability scrim, drifting dust
-    /// motes, and a time-of-day tint that warms as the customer queue drains.
-    /// The photo is displayed with a true "cover" fit (crop, never distort) via
-    /// RawImage UV cropping, so it fills any aspect ratio without stretching.
+    /// The living shop behind the HUD (canvas below everything): four room photos
+    /// (Empty/Sparse/Stocked/Full) that cross-fade based on the live inventory
+    /// count, a subtle readability scrim, drifting dust motes, and a time-of-day
+    /// tint that warms as the customer queue drains. Each photo displays with a
+    /// true "cover" fit (crop, never distort) via RawImage UV cropping, so it
+    /// fills any aspect ratio without stretching.
     /// All motion is continuous/eased on unscaled time — no jitter, no discrete
     /// jumps (the eye-strain lesson from the film grain pass).
     /// </summary>
     public class ShopSceneBackdrop : MonoBehaviour
     {
-        /// <summary>Drop a room photo here (Resources/Backgrounds/Shop.*) to change the scene.</summary>
-        public const string BackgroundResourcePath = "Backgrounds/Shop";
+        /// <summary>Per-stock-level room photos: Resources/Backgrounds/Shop_Empty(.*), _Sparse, _Stocked, _Full.</summary>
+        public const string BackgroundResourcePathPrefix = "Backgrounds/Shop_";
+
+        /// <summary>Single-image fallback (the pre-variant background) for any level whose own file is missing.</summary>
+        public const string BackgroundResourceFallbackPath = "Backgrounds/Shop";
 
         private const float ScrimAlpha = 0.20f;
         private const int MoteCount = 7;
         private const float MoteAlpha = 0.045f;
         private const float DayTintDamping = 3f; // seconds to settle toward the target tint
 
+        // Bucket edges, in items owned. Empty is always exactly zero.
+        private const int StockedAtCount = 4;
+        private const int FullAtCount = 10;
+
+        private const float CrossfadeDuration = 2f; // "very slow and smooth" per spec
+
         private static readonly Color MorningTint = new Color(0.55f, 0.65f, 0.90f, 0.045f);
         private static readonly Color EveningTint = new Color(0.95f, 0.60f, 0.30f, 0.060f);
+
+        private enum StockLevel { Empty, Sparse, Stocked, Full }
 
         private struct Mote
         {
@@ -38,9 +50,19 @@ namespace PawnshopKing.UI
         }
 
         private GameManager gm;
-        private RawImage background;
-        private float backgroundAspect = 16f / 9f;
+
+        // Double-buffered background: bgCurrent is always fully opaque and shows
+        // the last committed level; bgIncoming fades 0->1 on top of it during a
+        // transition, then the roles conceptually swap (bgCurrent's texture is
+        // replaced and bgIncoming resets to 0, ready for the next crossfade).
+        private RawImage bgCurrent;
+        private RawImage bgIncoming;
+        private readonly Sprite[] stockSprites = new Sprite[4];
+        private StockLevel currentLevel = StockLevel.Empty;
+        private StockLevel? transitioningTo;
+        private float transitionElapsed;
         private int lastScreenWidth = -1, lastScreenHeight = -1;
+
         private Image tintImage;
         private readonly List<Mote> motes = new List<Mote>();
         private int totalCustomersToday = 1;
@@ -57,6 +79,7 @@ namespace PawnshopKing.UI
                 return;
             }
 
+            LoadStockSprites();
             BuildScene();
 
             gm.Day.DayStarted += OnDayStarted;
@@ -86,14 +109,8 @@ namespace PawnshopKing.UI
             float t = Time.unscaledTime;
             float dt = Time.unscaledDeltaTime;
 
-            // Re-crop the photo only when the window actually changes size — a
-            // cheap int compare, not a per-frame recompute.
-            if (background.texture != null && (Screen.width != lastScreenWidth || Screen.height != lastScreenHeight))
-            {
-                lastScreenWidth = Screen.width;
-                lastScreenHeight = Screen.height;
-                background.uvRect = CoverUvRect(Screen.width / (float)Screen.height, backgroundAspect);
-            }
+            RecropOnResize();
+            UpdateStockCrossfade(dt);
 
             // Dust drifts up with a slow sway; wraps below the bottom edge.
             for (int i = 0; i < motes.Count; i++)
@@ -116,7 +133,97 @@ namespace PawnshopKing.UI
             tintImage.color = Color.Lerp(MorningTint, EveningTint, dayProgress);
         }
 
+        // ---- Inventory-driven crossfade ---------------------------------------
+
+        /// <summary>Re-crops both layers only when the window actually changes size — a cheap int compare.</summary>
+        private void RecropOnResize()
+        {
+            if (Screen.width == lastScreenWidth && Screen.height == lastScreenHeight) return;
+
+            lastScreenWidth = Screen.width;
+            lastScreenHeight = Screen.height;
+            float screenAspect = Screen.width / (float)Screen.height;
+
+            if (bgCurrent.texture != null)
+            {
+                bgCurrent.uvRect = CoverUvRect(screenAspect, bgCurrent.texture.width / (float)bgCurrent.texture.height);
+            }
+
+            if (bgIncoming.texture != null)
+            {
+                bgIncoming.uvRect = CoverUvRect(screenAspect, bgIncoming.texture.width / (float)bgIncoming.texture.height);
+            }
+        }
+
+        private void UpdateStockCrossfade(float dt)
+        {
+            // No campaign yet (main menu, before New Game/Continue): stay Empty.
+            var desired = gm.State != null ? LevelFor(gm.State.inventory.Count) : StockLevel.Empty;
+
+            if (desired != currentLevel && transitioningTo != desired)
+            {
+                // Starts a fresh 2s fade FROM the last committed image TO the
+                // newest target. If the target changes again mid-fade (a buying
+                // spree crossing two buckets in a few seconds), this restarts
+                // cleanly rather than fighting a second overlapping transition.
+                transitioningTo = desired;
+                transitionElapsed = 0f;
+                SetIncomingTexture(desired);
+            }
+
+            if (transitioningTo == null) return;
+
+            transitionElapsed += dt;
+            float t = Mathf.Clamp01(transitionElapsed / CrossfadeDuration);
+            float eased = t * t * (3f - 2f * t); // smoothstep: gentle in, gentle out
+
+            var color = bgIncoming.color;
+            color.a = eased;
+            bgIncoming.color = color;
+
+            if (t < 1f) return;
+
+            // Commit: the incoming image becomes the new baseline.
+            bgCurrent.texture = bgIncoming.texture;
+            bgCurrent.uvRect = bgIncoming.uvRect;
+            var idle = bgIncoming.color;
+            idle.a = 0f;
+            bgIncoming.color = idle;
+
+            currentLevel = transitioningTo.Value;
+            transitioningTo = null;
+        }
+
+        private static StockLevel LevelFor(int count)
+        {
+            if (count <= 0) return StockLevel.Empty;
+            if (count < StockedAtCount) return StockLevel.Sparse;
+            if (count < FullAtCount) return StockLevel.Stocked;
+            return StockLevel.Full;
+        }
+
         // ---- Construction ------------------------------------------------------
+
+        private void LoadStockSprites()
+        {
+            string[] suffixes = { "Empty", "Sparse", "Stocked", "Full" };
+            var fallback = Resources.Load<Sprite>(BackgroundResourceFallbackPath);
+            bool anyFound = false;
+
+            for (int i = 0; i < suffixes.Length; i++)
+            {
+                var sprite = Resources.Load<Sprite>(BackgroundResourcePathPrefix + suffixes[i]);
+                if (sprite == null) sprite = fallback; // graceful degrade: missing variants borrow the base image
+                stockSprites[i] = sprite;
+                anyFound |= sprite != null;
+            }
+
+            if (!anyFound)
+            {
+                Debug.LogWarning($"[ShopSceneBackdrop] No background sprites found under Resources/{BackgroundResourcePathPrefix}* " +
+                    $"or {BackgroundResourceFallbackPath} — showing a flat fallback color instead of the room.");
+            }
+        }
 
         private void BuildScene()
         {
@@ -133,7 +240,7 @@ namespace PawnshopKing.UI
 
             var root = canvasGO.transform;
 
-            BuildBackground(root);
+            BuildBackgroundLayers(root);
             CreateFullscreen(root, "ReadabilityScrim", new Color(0f, 0f, 0f, ScrimAlpha));
 
             for (int i = 0; i < MoteCount; i++)
@@ -159,29 +266,53 @@ namespace PawnshopKing.UI
             tintImage = CreateFullscreen(root, "DayTint", MorningTint);
         }
 
-        /// <summary>The authored room photo, full-bleed with a true cover fit (crop, never stretch).</summary>
-        private void BuildBackground(Transform root)
+        /// <summary>Two full-bleed RawImage layers for the crossfade; bgCurrent starts on Empty, fully opaque.</summary>
+        private void BuildBackgroundLayers(Transform root)
         {
-            var go = new GameObject("RoomPhoto", typeof(RectTransform), typeof(RawImage));
+            bgCurrent = CreateBackgroundLayer(root, "RoomPhotoCurrent");
+            bgIncoming = CreateBackgroundLayer(root, "RoomPhotoIncoming");
+
+            var incomingColor = bgIncoming.color;
+            incomingColor.a = 0f;
+            bgIncoming.color = incomingColor;
+
+            ApplyTexture(bgCurrent, stockSprites[(int)StockLevel.Empty]);
+        }
+
+        private static RawImage CreateBackgroundLayer(Transform root, string name)
+        {
+            var go = new GameObject(name, typeof(RectTransform), typeof(RawImage));
             go.transform.SetParent(root, false);
             var rect = (RectTransform)go.transform;
             rect.anchorMin = Vector2.zero;
             rect.anchorMax = Vector2.one;
             rect.offsetMin = rect.offsetMax = Vector2.zero;
 
-            background = go.GetComponent<RawImage>();
-            background.raycastTarget = false;
+            var image = go.GetComponent<RawImage>();
+            image.raycastTarget = false;
+            return image;
+        }
 
-            var sprite = Resources.Load<Sprite>(BackgroundResourcePath);
+        private void SetIncomingTexture(StockLevel level)
+        {
+            ApplyTexture(bgIncoming, stockSprites[(int)level]);
+            var color = bgIncoming.color;
+            color.a = 0f;
+            bgIncoming.color = color;
+        }
+
+        private void ApplyTexture(RawImage image, Sprite sprite)
+        {
             if (sprite != null)
             {
-                background.texture = sprite.texture;
-                backgroundAspect = sprite.texture.width / (float)sprite.texture.height;
+                image.texture = sprite.texture;
+                image.uvRect = CoverUvRect(Screen.width / (float)Screen.height,
+                    sprite.texture.width / (float)sprite.texture.height);
             }
             else
             {
-                Debug.LogWarning($"[ShopSceneBackdrop] No sprite at Resources/{BackgroundResourcePath} — showing a flat fallback color instead of the room.");
-                background.color = UITheme.Background;
+                image.texture = null;
+                image.color = new Color(UITheme.Background.r, UITheme.Background.g, UITheme.Background.b, image.color.a);
             }
         }
 
