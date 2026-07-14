@@ -36,6 +36,13 @@ namespace PawnshopKing.UI
         private const int StockedAtCount = 4;
         private const int FullAtCount = 10;
 
+        // Heat warning: inert below 70% of HeatEventSystem's threshold, then
+        // ramps in and gently pulses as danger actually approaches — a read on
+        // the shop's own lighting, not just the HUD number.
+        private const float HeatWarningRampStart = 0.7f;
+        private const float MaxHeatWarningAlpha = 0.16f;
+        private const float HeatWarningPulsePeriod = 4f;
+
         private const float CrossfadeDuration = 2f; // "very slow and smooth" per spec
 
         private static readonly Color MorningTint = new Color(0.55f, 0.65f, 0.90f, 0.045f);
@@ -68,6 +75,7 @@ namespace PawnshopKing.UI
         private int lastScreenWidth = -1, lastScreenHeight = -1;
 
         private Image tintImage;
+        private Image heatWarningImage;
         private readonly List<Mote> motes = new List<Mote>();
         private int totalCustomersToday = 1;
         private float dayProgressTarget;
@@ -135,6 +143,24 @@ namespace PawnshopKing.UI
             // Time-of-day tint eases toward the queue's progress — no steps.
             dayProgress = Mathf.MoveTowards(dayProgress, dayProgressTarget, dt / DayTintDamping);
             tintImage.color = Color.Lerp(MorningTint, EveningTint, dayProgress);
+
+            UpdateHeatWarning(t);
+        }
+
+        /// <summary>A slow red wash that only appears once heat is genuinely climbing toward trouble.</summary>
+        private void UpdateHeatWarning(float t)
+        {
+            int heat = gm.State != null ? gm.State.heat : 0;
+            float threshold = Systems.Events.HeatEventSystem.HeatThreshold;
+            float rampStart = threshold * HeatWarningRampStart;
+
+            float fraction = threshold > rampStart
+                ? Mathf.Clamp01((heat - rampStart) / (threshold - rampStart))
+                : 0f;
+
+            float pulse = fraction > 0f ? 1f + 0.2f * Mathf.Sin(2f * Mathf.PI * t / HeatWarningPulsePeriod) : 1f;
+            float alpha = fraction * MaxHeatWarningAlpha * pulse;
+            heatWarningImage.color = new Color(UITheme.Danger.r, UITheme.Danger.g, UITheme.Danger.b, alpha);
         }
 
         // ---- Inventory-driven crossfade ---------------------------------------
@@ -268,6 +294,7 @@ namespace PawnshopKing.UI
             }
 
             tintImage = CreateFullscreen(root, "DayTint", MorningTint);
+            heatWarningImage = CreateFullscreen(root, "HeatWarning", new Color(UITheme.Danger.r, UITheme.Danger.g, UITheme.Danger.b, 0f));
         }
 
         /// <summary>Two full-bleed RawImage layers for the crossfade; bgCurrent starts on Empty, fully opaque.</summary>

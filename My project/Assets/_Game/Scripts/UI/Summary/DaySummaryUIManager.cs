@@ -1,4 +1,6 @@
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Text;
 using PawnshopKing.Core;
 using PawnshopKing.Systems.Localization;
@@ -30,6 +32,16 @@ namespace PawnshopKing.UI
         private int finalProfit;
         private bool bodyAnimating;
         private Coroutine bodyRoutine;
+
+        // High-impact stamp juice: green flash + cha-ching pop for PAID, red
+        // flash + shake for SEIZED. Tracked with explicit cleanup actions (not
+        // relied-on coroutine finally blocks — StopCoroutine doesn't run those)
+        // so a click can cancel mid-effect without leaving anything stuck.
+        private RectTransform panelRect;
+        private Vector2 panelBasePosition;
+        private readonly List<(Coroutine routine, Action cleanup)> activeStampJuice = new List<(Coroutine, Action)>();
+        private GameObject flashGO;
+        private GameObject popupGO;
 
         private void Awake()
         {
@@ -74,12 +86,20 @@ namespace PawnshopKing.UI
 
         private void Update()
         {
-            // Click fast-forwards the count-up straight to the stamped verdict.
-            if (!bodyAnimating || !screenRoot.activeSelf) return;
+            if (!screenRoot.activeSelf) return;
             if (!UIFx.SkipClickPressed()) return;
 
-            if (bodyRoutine != null) StopCoroutine(bodyRoutine);
-            FinishBody();
+            // First click fast-forwards the count-up straight to the stamped
+            // verdict — the stamp's own juice gets to play before a second click
+            // can cut it short, rather than both stages vanishing in one frame.
+            if (bodyAnimating)
+            {
+                if (bodyRoutine != null) StopCoroutine(bodyRoutine);
+                FinishBody();
+                return;
+            }
+
+            if (activeStampJuice.Count > 0) ClearStampJuice();
         }
 
         private void Show(GamePhase phase)
@@ -169,14 +189,168 @@ namespace PawnshopKing.UI
 
             string key;
             Color color;
-            if (debt.forcedSale) { key = LanguageManager.Keys.StampSeized; color = UITheme.Danger; }
-            else if (debt.debtCleared || debt.paid) { key = LanguageManager.Keys.StampPaid; color = UITheme.Success; }
+            bool paid;
+            if (debt.forcedSale) { key = LanguageManager.Keys.StampSeized; color = UITheme.Danger; paid = false; }
+            else if (debt.debtCleared || debt.paid) { key = LanguageManager.Keys.StampPaid; color = UITheme.Success; paid = true; }
             else return;
 
             Loc.Set(stampLabel, Loc.T(key), UITheme.HeaderFont);
             stampLabel.color = color;
             stampGO.SetActive(true);
             StartCoroutine(StampSlamRoutine());
+
+            Systems.Audio.AudioManager.Instance?.PlayStamp();
+            if (paid) PlayPaidJuice(debt.amountPaid);
+            else PlaySeizedJuice();
+        }
+
+        // ---- Stamp juice: flash / cha-ching / shake ---------------------------
+
+        private void PlayPaidJuice(int amountPaid)
+        {
+            ClearStampJuice();
+
+            var flashCo = StartCoroutine(FlashRoutine(UITheme.Success));
+            activeStampJuice.Add((flashCo, () => { if (flashGO != null) { Destroy(flashGO); flashGO = null; } }));
+
+            var popupCo = StartCoroutine(CelebrationPopupRoutine($"+${amountPaid:N0}", UITheme.Success));
+            activeStampJuice.Add((popupCo, () => { if (popupGO != null) { Destroy(popupGO); popupGO = null; } }));
+        }
+
+        private void PlaySeizedJuice()
+        {
+            ClearStampJuice();
+
+            var flashCo = StartCoroutine(FlashRoutine(UITheme.Danger));
+            activeStampJuice.Add((flashCo, () => { if (flashGO != null) { Destroy(flashGO); flashGO = null; } }));
+
+            var shakeCo = StartCoroutine(ShakeRoutine());
+            activeStampJuice.Add((shakeCo, () => { if (panelRect != null) panelRect.anchoredPosition = panelBasePosition; }));
+        }
+
+        private void ClearStampJuice()
+        {
+            foreach (var (routine, cleanup) in activeStampJuice)
+            {
+                if (routine != null) StopCoroutine(routine);
+                cleanup();
+            }
+
+            activeStampJuice.Clear();
+        }
+
+        /// <summary>Quick full-screen color wash — rises fast, settles slower. One-time, not repeated, so it's safe at a higher peak alpha than ambient juice ever uses.</summary>
+        private IEnumerator FlashRoutine(Color color)
+        {
+            var go = new GameObject("StampFlash", typeof(RectTransform), typeof(Image));
+            go.transform.SetParent(screenRoot.transform, false);
+            var rect = (RectTransform)go.transform;
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = rect.offsetMax = Vector2.zero;
+
+            var image = go.GetComponent<Image>();
+            image.color = new Color(color.r, color.g, color.b, 0f);
+            image.raycastTarget = false;
+            flashGO = go;
+
+            const float peak = 0.24f, riseTime = 0.12f, fallTime = 0.4f;
+            float elapsed = 0f;
+            while (elapsed < riseTime)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                image.color = new Color(color.r, color.g, color.b, Mathf.Lerp(0f, peak, elapsed / riseTime));
+                yield return null;
+            }
+
+            elapsed = 0f;
+            while (elapsed < fallTime)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                image.color = new Color(color.r, color.g, color.b, Mathf.Lerp(peak, 0f, elapsed / fallTime));
+                yield return null;
+            }
+
+            Destroy(go);
+            flashGO = null;
+        }
+
+        /// <summary>"Cha-ching": a bold amount that bounces in with overshoot, holds, then fades.</summary>
+        private IEnumerator CelebrationPopupRoutine(string text, Color color)
+        {
+            var go = new GameObject("ChaChing", typeof(RectTransform), typeof(CanvasGroup));
+            go.transform.SetParent(panelRect, false);
+            // The panel's VerticalLayoutGroup would otherwise stack this in as
+            // another row (overriding the manual anchoring/scale below).
+            go.AddComponent<LayoutElement>().ignoreLayout = true;
+            var rect = (RectTransform)go.transform;
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = new Vector2(0f, 40f);
+            rect.sizeDelta = new Vector2(400f, 90f);
+
+            var label = go.AddComponent<TextMeshProUGUI>();
+            label.text = text;
+            label.fontSize = 52f;
+            label.fontStyle = FontStyles.Bold;
+            label.alignment = TextAlignmentOptions.Center;
+            label.color = color;
+            label.raycastTarget = false;
+            if (UITheme.HeaderFont != null)
+            {
+                label.font = UITheme.HeaderFont;
+                label.characterSpacing = UITheme.HeaderCharacterSpacing;
+            }
+
+            var group = go.GetComponent<CanvasGroup>();
+            group.alpha = 0f;
+            popupGO = go;
+
+            const float bounceTime = 0.3f;
+            float elapsed = 0f;
+            while (elapsed < bounceTime)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float t = Mathf.Clamp01(elapsed / bounceTime);
+                float scale = t < 0.7f ? Mathf.Lerp(0.4f, 1.18f, t / 0.7f) : Mathf.Lerp(1.18f, 1f, (t - 0.7f) / 0.3f);
+                rect.localScale = Vector3.one * scale;
+                group.alpha = Mathf.Min(1f, t * 1.6f);
+                yield return null;
+            }
+
+            rect.localScale = Vector3.one;
+            group.alpha = 1f;
+
+            yield return new WaitForSecondsRealtime(0.5f);
+
+            const float fadeTime = 0.35f;
+            elapsed = 0f;
+            while (elapsed < fadeTime)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                group.alpha = 1f - elapsed / fadeTime;
+                yield return null;
+            }
+
+            Destroy(go);
+            popupGO = null;
+        }
+
+        /// <summary>Subtle, brief, decaying jitter — never leaves the panel anywhere but exactly back home.</summary>
+        private IEnumerator ShakeRoutine()
+        {
+            const float duration = 0.35f, amplitude = 10f;
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float decay = 1f - elapsed / duration;
+                float offsetX = UnityEngine.Random.Range(-1f, 1f) * amplitude * decay;
+                float offsetY = UnityEngine.Random.Range(-1f, 1f) * amplitude * decay;
+                panelRect.anchoredPosition = panelBasePosition + new Vector2(offsetX, offsetY);
+                yield return null;
+            }
+
+            panelRect.anchoredPosition = panelBasePosition;
         }
 
         private IEnumerator StampSlamRoutine()
@@ -292,6 +466,9 @@ namespace PawnshopKing.UI
             panel.pivot = new Vector2(0.5f, 0.5f);
             panel.sizeDelta = new Vector2(680f, 480f);
             HUDUIManager.AddPanelShadow(panel);
+
+            panelRect = panel;
+            panelBasePosition = panel.anchoredPosition;
 
             var layout = panel.gameObject.AddComponent<VerticalLayoutGroup>();
             layout.padding = new RectOffset(40, 40, 32, 32);

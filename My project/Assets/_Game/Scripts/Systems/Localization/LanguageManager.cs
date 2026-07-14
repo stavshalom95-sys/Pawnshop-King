@@ -128,6 +128,11 @@ namespace PawnshopKing.Systems.Localization
             public const string StampPaid = "stamp_paid";
             public const string StampSeized = "stamp_seized";
 
+            public const string MoodAskingLine = "mood_asking_line"; // {0} = mood, {1} = asking price
+            public const string CustomerTypeHaggler = "customer_type_haggler";
+            public const string CustomerTypeDesperate = "customer_type_desperate";
+            public const string CustomerTypeHurryUp = "customer_type_hurryup";
+
             public const string On = "on";
             public const string Off = "off";
             public const string DifficultyLabel = "difficulty";
@@ -207,6 +212,11 @@ namespace PawnshopKing.Systems.Localization
             [Keys.StampPaid] = "PAID",
             [Keys.StampSeized] = "SEIZED",
 
+            [Keys.MoodAskingLine] = "Mood: {0}     Asking: {1}",
+            [Keys.CustomerTypeHaggler] = "Haggler",
+            [Keys.CustomerTypeDesperate] = "Desperate",
+            [Keys.CustomerTypeHurryUp] = "In a Hurry",
+
             [Keys.On] = "On",
             [Keys.Off] = "Off",
             [Keys.DifficultyLabel] = "Difficulty",
@@ -285,6 +295,11 @@ namespace PawnshopKing.Systems.Localization
 
             [Keys.StampPaid] = "שולם",
             [Keys.StampSeized] = "הוחרם",
+
+            [Keys.MoodAskingLine] = "מצב רוח: {0}     מבוקש: {1}",
+            [Keys.CustomerTypeHaggler] = "מתמקח",
+            [Keys.CustomerTypeDesperate] = "נואש",
+            [Keys.CustomerTypeHurryUp] = "ממהר",
 
             [Keys.On] = "פועל",
             [Keys.Off] = "כבוי",

@@ -148,6 +148,7 @@ namespace PawnshopKing.UI
             if (receipt.sold)
             {
                 UIFx.SpawnMoneyFloater(this, (RectTransform)screenRoot.transform, receipt.price, new Vector2(0f, 120f));
+                Systems.Audio.AudioManager.Instance?.PlayCashGain();
             }
 
             RebuildList();

@@ -37,6 +37,7 @@ namespace PawnshopKing.Systems.Debt
         private const float PaymentEscalation = 1.25f;   // each payment bites harder
         private const float MissedPenalty = 1.1f;        // missing adds 10% to the principal
         private const float ForcedSaleRate = 0.4f;       // creditors liquidate at 40% of shopfront
+        private const int SeizureHeatIncrease = 5;       // a creditor sweep draws its own kind of attention
 
         public static DebtTickResult ProcessEndOfDay(GameState state)
         {
@@ -88,6 +89,7 @@ namespace PawnshopKing.Systems.Debt
             state.reputation -= 2;
             state.debt.totalDebt = Mathf.RoundToInt(state.debt.totalDebt * MissedPenalty / 5f) * 5;
             result.forcedSale = true;
+            state.heat += SeizureHeatIncrease;
 
             result.itemsSeized = LiquidateUntilCovered(state, amount);
 

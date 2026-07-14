@@ -27,7 +27,7 @@ namespace PawnshopKing.Systems.Audio
         public static float Sfx
         {
             get => sfx ??= PlayerPrefs.GetFloat(SfxKey, 1f);
-            set { sfx = Mathf.Clamp01(value); PlayerPrefs.SetFloat(SfxKey, sfx.Value); }
+            set { sfx = Mathf.Clamp01(value); PlayerPrefs.SetFloat(SfxKey, sfx.Value); Apply(); }
         }
 
         public static float Music
@@ -52,6 +52,9 @@ namespace PawnshopKing.Systems.Audio
             // domain reload disabled) would swallow the update silently.
             var music = MusicManager.Instance;
             if (music != null) music.ApplySettings();
+
+            var audio = AudioManager.Instance;
+            if (audio != null) audio.ApplyAmbienceVolume();
         }
     }
 }

@@ -145,6 +145,7 @@ namespace PawnshopKing.UI
             RefreshBuyLabel();
             foreach (var row in itemRows) RefreshItemRow(row);
             UpdateTip();
+            if (currentCustomer != null) UpdateMoodAskingLine();
         }
 
         private void Update()
@@ -654,7 +655,34 @@ namespace PawnshopKing.UI
         private void UpdateMoodAskingLine()
         {
             string asking = currentCustomer.askingPrice > 0 ? $"${currentCustomer.askingPrice:N0}" : "—";
-            customerMoodText.text = $"Mood: {currentCustomer.mood}     Asking: {asking}";
+            string baseLine = Loc.F(LanguageManager.Keys.MoodAskingLine, currentCustomer.mood, asking);
+            string typeTag = $"   <color=#{TypeColorHex(currentCustomer.customerType)}>[{Loc.T(TypeKey(currentCustomer.customerType))}]</color>";
+            Loc.Set(customerMoodText, baseLine + typeTag);
+        }
+
+        /// <summary>Localization key for the visible customer-type tag (GDD-adjacent: see CustomerType).</summary>
+        private static string TypeKey(CustomerType type)
+        {
+            switch (type)
+            {
+                case CustomerType.Haggler: return LanguageManager.Keys.CustomerTypeHaggler;
+                case CustomerType.Desperate: return LanguageManager.Keys.CustomerTypeDesperate;
+                default: return LanguageManager.Keys.CustomerTypeHurryUp;
+            }
+        }
+
+        /// <summary>Derived from UITheme rather than a fresh hardcoded hex, so a palette change still lands here.</summary>
+        private static string TypeColorHex(CustomerType type)
+        {
+            Color color;
+            switch (type)
+            {
+                case CustomerType.Haggler: color = UITheme.Danger; break;
+                case CustomerType.Desperate: color = UITheme.Success; break;
+                default: color = UITheme.Gold; break;
+            }
+
+            return ColorUtility.ToHtmlStringRGB(color);
         }
 
         private void RefreshBuyLabel()

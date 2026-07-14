@@ -23,6 +23,7 @@ namespace PawnshopKing.Systems.Customers
             customer.greed = archetype.greedRange.Roll();
 
             customer.mood = RollStartingMood(customer);
+            customer.customerType = (CustomerType)UnityEngine.Random.Range(0, 3);
             customer.items.AddRange(ItemGenerator.GenerateItemsFor(archetype));
             customer.askingPrice = NegotiationSystem.CalculateAskingPrice(customer);
 

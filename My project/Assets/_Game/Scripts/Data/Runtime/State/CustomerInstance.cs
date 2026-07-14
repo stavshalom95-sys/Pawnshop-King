@@ -22,6 +22,7 @@ namespace PawnshopKing.Data.Runtime
 
         public CustomerMood mood = CustomerMood.Neutral;
         public NegotiationState negotiationState = NegotiationState.NotStarted;
+        public CustomerType customerType;
 
         // Bundle price for everything they carry; counters rewrite it as talks go on.
         public int askingPrice;

@@ -16,6 +16,18 @@ namespace PawnshopKing.Data
         Offended
     }
 
+    /// <summary>
+    /// A per-visit negotiation "flavor," rolled independently of the archetype's
+    /// hidden stats — a visible-to-the-player signal (unlike patience/desperation/
+    /// greed, which never surface directly) so haggling has a legible read.
+    /// </summary>
+    public enum CustomerType
+    {
+        Haggler,   // Asks more, settles for more, haggles longer — the hard sell.
+        Desperate, // Asks less, settles for less — the easy bargain.
+        HurryUp    // Wants it over fast — burns through patience quicker.
+    }
+
     /// <summary>Where a customer's visit currently stands (GDD 13.5, 38.2).</summary>
     public enum NegotiationState
     {
