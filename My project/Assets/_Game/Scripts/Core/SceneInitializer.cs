@@ -47,6 +47,7 @@ namespace PawnshopKing.Core
             root.AddComponent<UI.HUDUIManager>();
             root.AddComponent<UI.InventoryUIManager>();
             root.AddComponent<UI.UpgradeUIManager>();
+            root.AddComponent<UI.DebtUIManager>();
             root.AddComponent<UI.DaySummaryUIManager>();
             root.AddComponent<UI.MainMenuUIManager>();
             root.AddComponent<UI.PauseMenuUIManager>();

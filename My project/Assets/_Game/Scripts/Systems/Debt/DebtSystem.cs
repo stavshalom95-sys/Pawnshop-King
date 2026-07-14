@@ -24,6 +24,16 @@ namespace PawnshopKing.Systems.Debt
         public string message;
     }
 
+    /// <summary>Result of a voluntary mid-day debt payment — see DebtSystem.TryPrepay.</summary>
+    public struct PrepayResult
+    {
+        public bool success;
+        public int amountPaid;
+        public bool debtCleared;
+        /// <summary>Human-readable summary line (English; the UI composes localized text from the fields above).</summary>
+        public string message;
+    }
+
     /// <summary>
     /// Tracks debt milestones and penalties (GDD 39). Runs at end of day: ticks the
     /// clock, auto-pays when due if cash covers it, and otherwise applies the teeth —
@@ -62,6 +72,10 @@ namespace PawnshopKing.Systems.Debt
 
             if (state.debt.totalDebt <= 0)
             {
+                // Also reached by a prepayment that already zeroed the debt
+                // before tonight — debtCleared must fire here too, or a player
+                // who prepays their way to zero never sees Victory trigger.
+                result.debtCleared = true;
                 result.message = "You owe nothing. The shop is yours.";
                 return result;
             }
@@ -129,6 +143,56 @@ namespace PawnshopKing.Systems.Debt
             state.debt.daysUntilPayment = PaymentIntervalDays;
 
             result.message = $"Debt payment of ${amount:N0} made. ${state.debt.totalDebt:N0} remains — next payment ${state.debt.nextPaymentAmount:N0} in {PaymentIntervalDays} days.";
+        }
+
+        /// <summary>
+        /// Player-initiated debt reduction (GDD-adjacent agency layer): applies
+        /// cash toward totalDebt on demand, any day, any amount. Deliberately
+        /// leaves the 7-day scheduled payment untouched — daysUntilPayment never
+        /// moves here, so the deadline stays exactly as hard as it was. The
+        /// existing scheduled tick already clamps its own charge to
+        /// Min(nextPaymentAmount, totalDebt), so a prepayment that shrinks
+        /// totalDebt below the next scheduled amount is automatically respected
+        /// there too — nothing else needs to change to support that.
+        /// </summary>
+        public static PrepayResult TryPrepay(GameState state, int amount)
+        {
+            if (amount <= 0)
+            {
+                return new PrepayResult { message = "Enter an amount to pay first." };
+            }
+
+            if (amount > state.cash)
+            {
+                return new PrepayResult { message = "You don't have that much cash." };
+            }
+
+            if (state.debt.totalDebt <= 0)
+            {
+                return new PrepayResult { message = "You don't owe anything." };
+            }
+
+            int applied = Mathf.Min(amount, state.debt.totalDebt);
+            state.cash -= applied;
+            state.debt.totalDebt -= applied;
+
+            bool cleared = state.debt.totalDebt <= 0;
+            if (cleared)
+            {
+                state.debt.totalDebt = 0;
+                state.debt.nextPaymentAmount = 0;
+                state.debt.daysUntilPayment = 0;
+            }
+
+            return new PrepayResult
+            {
+                success = true,
+                amountPaid = applied,
+                debtCleared = cleared,
+                message = cleared
+                    ? $"Paid ${applied:N0}. The debt is clear!"
+                    : $"Paid ${applied:N0} toward the debt. ${state.debt.totalDebt:N0} remains.",
+            };
         }
 
         /// <summary>Creditors take the most valuable pieces first, at rock-bottom prices.</summary>

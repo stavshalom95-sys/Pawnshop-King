@@ -1067,6 +1067,17 @@ namespace PawnshopKing.UI
             upgradesRect.pivot = Vector2.zero;
             upgradesRect.anchoredPosition = new Vector2(272f, 36f);
             upgradesRect.sizeDelta = new Vector2(220f, 68f);
+
+            // Voluntary debt prepayment, next to Upgrades — agency on top of the
+            // fixed 7-day payment schedule, which this never touches.
+            var debtLabel = CreateSmallButton(gameplay, "Debt", 200f,
+                () => DebtUIManager.Instance?.Toggle());
+            LocalizedLabel.Bind(debtLabel, LanguageManager.Keys.Debt);
+            var debtRect = (RectTransform)debtLabel.transform.parent;
+            debtRect.anchorMin = debtRect.anchorMax = Vector2.zero;
+            debtRect.pivot = Vector2.zero;
+            debtRect.anchoredPosition = new Vector2(508f, 36f);
+            debtRect.sizeDelta = new Vector2(220f, 68f);
         }
 
         private void BuildActionButton(RectTransform parent)
@@ -1117,7 +1128,7 @@ namespace PawnshopKing.UI
             layout.childForceExpandWidth = false;
             layout.childForceExpandHeight = false;
 
-            offerInput = CreateOfferInput(dealControls.transform);
+            offerInput = CreateAmountInput(dealControls.transform, LanguageManager.Keys.OfferPlaceholder);
             offerInput.onSubmit.AddListener(_ => OnOfferClicked());
             offerInput.onEndEdit.AddListener(_ => OnOfferInputEndEdit());
 
@@ -1132,16 +1143,17 @@ namespace PawnshopKing.UI
             dealControls.SetActive(false);
         }
 
-        private TMP_InputField CreateOfferInput(Transform parent)
+        /// <summary>Shared numeric-amount input (offer field, debt prepayment field, …). Placeholder is localized and stays in sync on a language switch.</summary>
+        internal static TMP_InputField CreateAmountInput(Transform parent, string placeholderKey, float width = 170f)
         {
-            var go = new GameObject("OfferInput", typeof(RectTransform), typeof(Image));
+            var go = new GameObject("AmountInput", typeof(RectTransform), typeof(Image));
             go.transform.SetParent(parent, false);
             var inputImage = go.GetComponent<Image>();
             inputImage.color = UITheme.SurfaceRaised;
             inputImage.sprite = UITheme.RoundedSprite;
             inputImage.type = Image.Type.Sliced;
             var layoutElement = go.AddComponent<LayoutElement>();
-            layoutElement.preferredWidth = 170f;
+            layoutElement.preferredWidth = width;
             layoutElement.preferredHeight = 46f;
 
             var input = go.AddComponent<TMP_InputField>();
@@ -1161,8 +1173,8 @@ namespace PawnshopKing.UI
             textRect.offsetMin = textRect.offsetMax = Vector2.zero;
 
             var placeholder = CreateText(viewport, "Placeholder", 20f, TextAlignmentOptions.Left, FontStyles.Italic);
-            placeholder.text = "offer $";
             placeholder.color = MutedColor;
+            LocalizedLabel.Bind(placeholder, placeholderKey);
             var placeholderRect = (RectTransform)placeholder.transform;
             placeholderRect.anchorMin = Vector2.zero;
             placeholderRect.anchorMax = Vector2.one;
