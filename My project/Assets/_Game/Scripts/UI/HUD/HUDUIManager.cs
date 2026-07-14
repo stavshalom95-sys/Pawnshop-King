@@ -1201,10 +1201,15 @@ namespace PawnshopKing.UI
             var text = CreateText(go.transform, "Label", 20f, TextAlignmentOptions.Center, FontStyles.Bold);
             text.text = label;
             text.color = ButtonTextColor;
+            text.textWrappingMode = TextWrappingModes.NoWrap; // a button label is one line, always — wrapping it into two is its own kind of clipping
             var labelRect = (RectTransform)text.transform;
             labelRect.anchorMin = Vector2.zero;
             labelRect.anchorMax = Vector2.one;
             labelRect.offsetMin = labelRect.offsetMax = Vector2.zero;
+
+            // A localized label can need more room than the requested English
+            // width — never shrinks below it, only grows to fit.
+            ButtonAutoWidth.Attach(text, layoutElement, width);
 
             return text;
         }
@@ -1257,6 +1262,10 @@ namespace PawnshopKing.UI
             text.fontStyle = style;
             text.color = TextColor;
             text.text = string.Empty;
+            // Explicit, not relying on TMP's default: a localized string (Hebrew
+            // in particular) can run longer than the English baseline a container
+            // was sized for, and overflow (visible) beats truncate (silently gone).
+            text.overflowMode = TextOverflowModes.Overflow;
             if (header && UITheme.HeaderFont != null)
             {
                 text.font = UITheme.HeaderFont;
