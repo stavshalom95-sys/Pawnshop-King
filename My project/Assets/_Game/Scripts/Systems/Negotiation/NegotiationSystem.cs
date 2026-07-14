@@ -50,7 +50,7 @@ namespace PawnshopKing.Systems.Negotiation
 
             float factor = Mathf.Clamp(
                 0.5f + 0.45f * customer.greed + 0.2f * (1f - customer.honesty) - 0.3f * customer.desperation
-                    + DifficultyTuning.AskFactorShift,
+                    + DifficultyTuning.AskFactorShift + TypeAskShift(customer.customerType),
                 0.3f, 1.3f);
 
             // Asks are quoted in $25 steps so subset re-quotes stay too coarse to
@@ -106,7 +106,8 @@ namespace PawnshopKing.Systems.Negotiation
 
             // The fraction of the current ask they'd quietly settle for.
             float settleLine = Mathf.Clamp(
-                0.9f - 0.4f * customer.desperation + 0.25f * customer.greed + DifficultyTuning.SettleLineShift,
+                0.9f - 0.4f * customer.desperation + 0.25f * customer.greed
+                    + DifficultyTuning.SettleLineShift + TypeSettleShift(customer.customerType),
                 0.45f, 1f);
             if (ratio >= settleLine && Random.value < 0.65f + (ratio - settleLine) * 2f)
             {
@@ -128,8 +129,10 @@ namespace PawnshopKing.Systems.Negotiation
                 }
             }
 
-            // Patience budget: 1-4 rounds of haggling before they're done.
-            int maxRounds = 1 + Mathf.RoundToInt(customer.patience * 3f);
+            // Patience budget: 1-4 rounds of haggling before they're done, nudged
+            // by the visible customer type (Haggler holds out longer, HurryUp less).
+            int maxRounds = Mathf.Max(1,
+                1 + Mathf.RoundToInt(customer.patience * 3f) + TypeRoundsShift(customer.customerType));
             if (customer.offersMade >= maxRounds)
             {
                 if (customer.desperation > 0.55f && ratio >= insultLine)
@@ -201,5 +204,29 @@ namespace PawnshopKing.Systems.Negotiation
         }
 
         private static int RoundToFive(float value) => Mathf.RoundToInt(value / 5f) * 5;
+
+        // ---- Customer type modifiers (GDD-adjacent: a visible read on an
+        // otherwise-hidden stat block — see CustomerType) ----------------------
+
+        private static float TypeAskShift(CustomerType type) => type switch
+        {
+            CustomerType.Haggler => 0.05f,
+            CustomerType.Desperate => -0.05f,
+            _ => 0f,
+        };
+
+        private static float TypeSettleShift(CustomerType type) => type switch
+        {
+            CustomerType.Haggler => 0.06f,
+            CustomerType.Desperate => -0.06f,
+            _ => 0f,
+        };
+
+        private static int TypeRoundsShift(CustomerType type) => type switch
+        {
+            CustomerType.Haggler => 1,
+            CustomerType.HurryUp => -1,
+            _ => 0,
+        };
     }
 }

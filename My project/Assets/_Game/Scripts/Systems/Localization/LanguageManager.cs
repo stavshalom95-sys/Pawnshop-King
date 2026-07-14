@@ -128,6 +128,22 @@ namespace PawnshopKing.Systems.Localization
             public const string StampPaid = "stamp_paid";
             public const string StampSeized = "stamp_seized";
 
+            public const string Debt = "debt";
+            public const string DebtPanelTitle = "debt_panel_title";       // {0} = amount owed
+            public const string DebtPanelCash = "debt_panel_cash";         // {0} = cash on hand
+            public const string DebtPanelPay = "debt_panel_pay";
+            public const string DebtPanelEnterAmount = "debt_panel_enter_amount";
+            public const string DebtPanelInsufficientCash = "debt_panel_insufficient_cash";
+            public const string DebtPanelPaid = "debt_panel_paid";               // {0} = paid, {1} = remaining
+            public const string DebtPanelPaidCleared = "debt_panel_paid_cleared"; // {0} = paid
+            public const string OfferPlaceholder = "offer_placeholder";
+            public const string DebtPayPlaceholder = "debt_pay_placeholder";
+
+            public const string MoodAskingLine = "mood_asking_line"; // {0} = mood, {1} = asking price
+            public const string CustomerTypeHaggler = "customer_type_haggler";
+            public const string CustomerTypeDesperate = "customer_type_desperate";
+            public const string CustomerTypeHurryUp = "customer_type_hurryup";
+
             public const string On = "on";
             public const string Off = "off";
             public const string DifficultyLabel = "difficulty";
@@ -207,6 +223,22 @@ namespace PawnshopKing.Systems.Localization
             [Keys.StampPaid] = "PAID",
             [Keys.StampSeized] = "SEIZED",
 
+            [Keys.Debt] = "Debt",
+            [Keys.DebtPanelTitle] = "Debt — ${0} owed",
+            [Keys.DebtPanelCash] = "Cash on hand: ${0}",
+            [Keys.DebtPanelPay] = "Pay",
+            [Keys.DebtPanelEnterAmount] = "Enter an amount to pay first.",
+            [Keys.DebtPanelInsufficientCash] = "You don't have that much cash.",
+            [Keys.DebtPanelPaid] = "Paid ${0} toward the debt. ${1} remains.",
+            [Keys.DebtPanelPaidCleared] = "Paid ${0}. The debt is clear!",
+            [Keys.OfferPlaceholder] = "offer $",
+            [Keys.DebtPayPlaceholder] = "amount $",
+
+            [Keys.MoodAskingLine] = "Mood: {0}     Asking: {1}",
+            [Keys.CustomerTypeHaggler] = "Haggler",
+            [Keys.CustomerTypeDesperate] = "Desperate",
+            [Keys.CustomerTypeHurryUp] = "In a Hurry",
+
             [Keys.On] = "On",
             [Keys.Off] = "Off",
             [Keys.DifficultyLabel] = "Difficulty",
@@ -285,6 +317,22 @@ namespace PawnshopKing.Systems.Localization
 
             [Keys.StampPaid] = "שולם",
             [Keys.StampSeized] = "הוחרם",
+
+            [Keys.Debt] = "חוב",
+            [Keys.DebtPanelTitle] = "חוב — ${0} לתשלום",
+            [Keys.DebtPanelCash] = "מזומן בקופה: ${0}",
+            [Keys.DebtPanelPay] = "שלם",
+            [Keys.DebtPanelEnterAmount] = "הזן סכום לתשלום קודם.",
+            [Keys.DebtPanelInsufficientCash] = "אין לך מספיק מזומן.",
+            [Keys.DebtPanelPaid] = "שולם ${0} על חשבון החוב. נותרו ${1}.",
+            [Keys.DebtPanelPaidCleared] = "שולם ${0}. החוב נפרע במלואו!",
+            [Keys.OfferPlaceholder] = "הצעה $",
+            [Keys.DebtPayPlaceholder] = "סכום $",
+
+            [Keys.MoodAskingLine] = "מצב רוח: {0}     מבוקש: {1}",
+            [Keys.CustomerTypeHaggler] = "מתמקח",
+            [Keys.CustomerTypeDesperate] = "נואש",
+            [Keys.CustomerTypeHurryUp] = "ממהר",
 
             [Keys.On] = "פועל",
             [Keys.Off] = "כבוי",

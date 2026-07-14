@@ -145,6 +145,7 @@ namespace PawnshopKing.UI
             RefreshBuyLabel();
             foreach (var row in itemRows) RefreshItemRow(row);
             UpdateTip();
+            if (currentCustomer != null) UpdateMoodAskingLine();
         }
 
         private void Update()
@@ -654,7 +655,34 @@ namespace PawnshopKing.UI
         private void UpdateMoodAskingLine()
         {
             string asking = currentCustomer.askingPrice > 0 ? $"${currentCustomer.askingPrice:N0}" : "—";
-            customerMoodText.text = $"Mood: {currentCustomer.mood}     Asking: {asking}";
+            string baseLine = Loc.F(LanguageManager.Keys.MoodAskingLine, currentCustomer.mood, asking);
+            string typeTag = $"   <color=#{TypeColorHex(currentCustomer.customerType)}>[{Loc.T(TypeKey(currentCustomer.customerType))}]</color>";
+            Loc.Set(customerMoodText, baseLine + typeTag);
+        }
+
+        /// <summary>Localization key for the visible customer-type tag (GDD-adjacent: see CustomerType).</summary>
+        private static string TypeKey(CustomerType type)
+        {
+            switch (type)
+            {
+                case CustomerType.Haggler: return LanguageManager.Keys.CustomerTypeHaggler;
+                case CustomerType.Desperate: return LanguageManager.Keys.CustomerTypeDesperate;
+                default: return LanguageManager.Keys.CustomerTypeHurryUp;
+            }
+        }
+
+        /// <summary>Derived from UITheme rather than a fresh hardcoded hex, so a palette change still lands here.</summary>
+        private static string TypeColorHex(CustomerType type)
+        {
+            Color color;
+            switch (type)
+            {
+                case CustomerType.Haggler: color = UITheme.Danger; break;
+                case CustomerType.Desperate: color = UITheme.Success; break;
+                default: color = UITheme.Gold; break;
+            }
+
+            return ColorUtility.ToHtmlStringRGB(color);
         }
 
         private void RefreshBuyLabel()
@@ -1039,6 +1067,17 @@ namespace PawnshopKing.UI
             upgradesRect.pivot = Vector2.zero;
             upgradesRect.anchoredPosition = new Vector2(272f, 36f);
             upgradesRect.sizeDelta = new Vector2(220f, 68f);
+
+            // Voluntary debt prepayment, next to Upgrades — agency on top of the
+            // fixed 7-day payment schedule, which this never touches.
+            var debtLabel = CreateSmallButton(gameplay, "Debt", 200f,
+                () => DebtUIManager.Instance?.Toggle());
+            LocalizedLabel.Bind(debtLabel, LanguageManager.Keys.Debt);
+            var debtRect = (RectTransform)debtLabel.transform.parent;
+            debtRect.anchorMin = debtRect.anchorMax = Vector2.zero;
+            debtRect.pivot = Vector2.zero;
+            debtRect.anchoredPosition = new Vector2(508f, 36f);
+            debtRect.sizeDelta = new Vector2(220f, 68f);
         }
 
         private void BuildActionButton(RectTransform parent)
@@ -1089,7 +1128,7 @@ namespace PawnshopKing.UI
             layout.childForceExpandWidth = false;
             layout.childForceExpandHeight = false;
 
-            offerInput = CreateOfferInput(dealControls.transform);
+            offerInput = CreateAmountInput(dealControls.transform, LanguageManager.Keys.OfferPlaceholder);
             offerInput.onSubmit.AddListener(_ => OnOfferClicked());
             offerInput.onEndEdit.AddListener(_ => OnOfferInputEndEdit());
 
@@ -1104,16 +1143,17 @@ namespace PawnshopKing.UI
             dealControls.SetActive(false);
         }
 
-        private TMP_InputField CreateOfferInput(Transform parent)
+        /// <summary>Shared numeric-amount input (offer field, debt prepayment field, …). Placeholder is localized and stays in sync on a language switch.</summary>
+        internal static TMP_InputField CreateAmountInput(Transform parent, string placeholderKey, float width = 170f)
         {
-            var go = new GameObject("OfferInput", typeof(RectTransform), typeof(Image));
+            var go = new GameObject("AmountInput", typeof(RectTransform), typeof(Image));
             go.transform.SetParent(parent, false);
             var inputImage = go.GetComponent<Image>();
             inputImage.color = UITheme.SurfaceRaised;
             inputImage.sprite = UITheme.RoundedSprite;
             inputImage.type = Image.Type.Sliced;
             var layoutElement = go.AddComponent<LayoutElement>();
-            layoutElement.preferredWidth = 170f;
+            layoutElement.preferredWidth = width;
             layoutElement.preferredHeight = 46f;
 
             var input = go.AddComponent<TMP_InputField>();
@@ -1133,8 +1173,8 @@ namespace PawnshopKing.UI
             textRect.offsetMin = textRect.offsetMax = Vector2.zero;
 
             var placeholder = CreateText(viewport, "Placeholder", 20f, TextAlignmentOptions.Left, FontStyles.Italic);
-            placeholder.text = "offer $";
             placeholder.color = MutedColor;
+            LocalizedLabel.Bind(placeholder, placeholderKey);
             var placeholderRect = (RectTransform)placeholder.transform;
             placeholderRect.anchorMin = Vector2.zero;
             placeholderRect.anchorMax = Vector2.one;
@@ -1173,10 +1213,15 @@ namespace PawnshopKing.UI
             var text = CreateText(go.transform, "Label", 20f, TextAlignmentOptions.Center, FontStyles.Bold);
             text.text = label;
             text.color = ButtonTextColor;
+            text.textWrappingMode = TextWrappingModes.NoWrap; // a button label is one line, always — wrapping it into two is its own kind of clipping
             var labelRect = (RectTransform)text.transform;
             labelRect.anchorMin = Vector2.zero;
             labelRect.anchorMax = Vector2.one;
             labelRect.offsetMin = labelRect.offsetMax = Vector2.zero;
+
+            // A localized label can need more room than the requested English
+            // width — never shrinks below it, only grows to fit.
+            ButtonAutoWidth.Attach(text, layoutElement, width);
 
             return text;
         }
@@ -1229,6 +1274,10 @@ namespace PawnshopKing.UI
             text.fontStyle = style;
             text.color = TextColor;
             text.text = string.Empty;
+            // Explicit, not relying on TMP's default: a localized string (Hebrew
+            // in particular) can run longer than the English baseline a container
+            // was sized for, and overflow (visible) beats truncate (silently gone).
+            text.overflowMode = TextOverflowModes.Overflow;
             if (header && UITheme.HeaderFont != null)
             {
                 text.font = UITheme.HeaderFont;

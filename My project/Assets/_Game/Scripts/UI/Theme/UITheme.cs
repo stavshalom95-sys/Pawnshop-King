@@ -135,23 +135,66 @@ namespace PawnshopKing.UI
         /// TMP reverses the whole string, which corrects logical-order Hebrew but
         /// mirrors embedded Latin ("Inspect" → "tcepsnI"). Pre-reversing each Latin
         /// run — a whole phrase including its internal spaces, so "Next Customer"
-        /// keeps its word order — makes it come out forward again. Not a full bidi
-        /// engine — enough for one-line tips without nesting or numerals-in-Hebrew.
+        /// keeps its word order — makes it come out forward again.
+        ///
+        /// Brackets need a second, independent fix: TMP's reversal is purely
+        /// positional (it never swaps which glyph renders at a position), so a
+        /// literal "(" and ")" just trade places without trading shape, landing
+        /// as ")2(" instead of "(2)". Each bracket is pre-swapped to its mirror
+        /// character on its own (not folded into the Latin-run reversal above),
+        /// so TMP's later positional reversal puts the correct glyph in the
+        /// correct spot — this also fixes standalone brackets around Hebrew text,
+        /// like the "[Type]" tag on the counter's mood line.
+        ///
+        /// Currency/number symbols need the SAME run-reversal treatment as
+        /// letters, not just the digits: "$5,000" with only digits in the run
+        /// class splits into "5" + "," + "000" as three separate fragments, and
+        /// TMP's later whole-string reversal scrambles their relative order into
+        /// "000,5$". Folding $ % + - ± , . into the same character class as
+        /// letters/digits keeps a signed currency figure ("+$240", "-$85") as one
+        /// reversible unit, so it comes out forward and in the right place.
+        ///
+        /// Not a full bidi engine — enough for one-line UI strings without
+        /// nesting or other mirrored punctuation (guillemets etc).
         /// </summary>
         public static string PrepareRtl(string text)
         {
             // Rich-text tags (<color=...>, <size=...>) match first and pass through
             // untouched — reversing their contents would break TMP's parser.
+            const string runChars = "A-Za-z0-9$%+\\-±,.";
             return System.Text.RegularExpressions.Regex.Replace(
                 text,
-                "<[^>]*>|[A-Za-z0-9][A-Za-z0-9 ]*[A-Za-z0-9]|[A-Za-z0-9]",
+                $"<[^>]*>|[{runChars}][{runChars} ]*[{runChars}]|[{runChars}]|[()\\[\\]{{}}]",
                 match =>
                 {
-                    if (match.Value[0] == '<') return match.Value;
-                    var chars = match.Value.ToCharArray();
+                    string value = match.Value;
+                    if (value[0] == '<') return value;
+
+                    if (value.Length == 1)
+                    {
+                        char mirrored = MirrorBracket(value[0]);
+                        if (mirrored != value[0]) return mirrored.ToString();
+                    }
+
+                    var chars = value.ToCharArray();
                     System.Array.Reverse(chars);
                     return new string(chars);
                 });
+        }
+
+        /// <summary>Bidi mirror-pair for a bracket character; returns the input unchanged for anything else.</summary>
+        private static char MirrorBracket(char c)
+        {
+            switch (c)
+            {
+                case '(': return ')';
+                case ')': return '(';
+                case '[': return ']';
+                case ']': return '[';
+                case '{': return '}';
+                case '}': return '{';
+                default: return c;
+            }
         }
 
         // ---- Procedural sprites (rounded corners, soft shadows) ----
