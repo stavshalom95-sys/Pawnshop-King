@@ -146,16 +146,25 @@ namespace PawnshopKing.UI
         /// correct spot — this also fixes standalone brackets around Hebrew text,
         /// like the "[Type]" tag on the counter's mood line.
         ///
+        /// Currency/number symbols need the SAME run-reversal treatment as
+        /// letters, not just the digits: "$5,000" with only digits in the run
+        /// class splits into "5" + "," + "000" as three separate fragments, and
+        /// TMP's later whole-string reversal scrambles their relative order into
+        /// "000,5$". Folding $ % + - ± , . into the same character class as
+        /// letters/digits keeps a signed currency figure ("+$240", "-$85") as one
+        /// reversible unit, so it comes out forward and in the right place.
+        ///
         /// Not a full bidi engine — enough for one-line UI strings without
-        /// nesting, RTL numeral runs, or other mirrored punctuion (guillemets etc).
+        /// nesting or other mirrored punctuation (guillemets etc).
         /// </summary>
         public static string PrepareRtl(string text)
         {
             // Rich-text tags (<color=...>, <size=...>) match first and pass through
             // untouched — reversing their contents would break TMP's parser.
+            const string runChars = "A-Za-z0-9$%+\\-±,.";
             return System.Text.RegularExpressions.Regex.Replace(
                 text,
-                "<[^>]*>|[A-Za-z0-9][A-Za-z0-9 ]*[A-Za-z0-9]|[A-Za-z0-9]|[()\\[\\]{}]",
+                $"<[^>]*>|[{runChars}][{runChars} ]*[{runChars}]|[{runChars}]|[()\\[\\]{{}}]",
                 match =>
                 {
                     string value = match.Value;
