@@ -954,8 +954,11 @@ namespace PawnshopKing.UI
         private void BuildGameplayPanel(Transform canvas)
         {
             // Fills everything under the top bar; the shop screen proper (GDD 32.1 A).
+            // Barely tinted now that ShopSceneBackdrop paints a real room behind
+            // this canvas — its own readability scrim does the dimming; this is
+            // just a faint navy cast so the top bar's color carries down.
             var gameplay = CreatePanel(canvas, "GameplayPanel", new Color(
-                UITheme.Background.r, UITheme.Background.g, UITheme.Background.b, 0.6f));
+                UITheme.Background.r, UITheme.Background.g, UITheme.Background.b, 0.08f));
             gameplay.anchorMin = Vector2.zero;
             gameplay.anchorMax = Vector2.one;
             gameplay.offsetMin = Vector2.zero;
@@ -965,9 +968,16 @@ namespace PawnshopKing.UI
             customerPanelRect = panel;
             panel.anchorMin = panel.anchorMax = new Vector2(0.5f, 0.5f);
             panel.pivot = new Vector2(0.5f, 0.5f);
-            panel.anchoredPosition = new Vector2(0f, 10f);
-            panel.sizeDelta = new Vector2(860f, 640f);
+            // Shifted down and shortened to sit over the counter in the room photo,
+            // leaving the painted shelves above it visible instead of covered.
+            panel.anchoredPosition = new Vector2(0f, -88f);
+            panel.sizeDelta = new Vector2(860f, 560f);
             AddPanelShadow(panel);
+
+            // Slightly translucent so the counter reads through at the card's
+            // edges — the UI as part of the room, not a rectangle floating over it.
+            var panelImage = panel.GetComponent<Image>();
+            panelImage.color = new Color(panelImage.color.r, panelImage.color.g, panelImage.color.b, 0.88f);
 
             var layout = panel.gameObject.AddComponent<VerticalLayoutGroup>();
             layout.padding = new RectOffset(32, 32, 28, 28);
