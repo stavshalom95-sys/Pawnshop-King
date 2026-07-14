@@ -23,7 +23,11 @@ namespace PawnshopKing.UI
         /// <summary>Single-image fallback (the pre-variant background) for any level whose own file is missing.</summary>
         public const string BackgroundResourceFallbackPath = "Backgrounds/Shop";
 
-        private const float ScrimAlpha = 0.20f;
+        // The room art itself is already dark/moody (near-black ceiling, navy
+        // walls), so it needs less help than a generic photo would — a lighter
+        // scrim lets the shelf and lamp detail actually read instead of washing
+        // it flat.
+        private const float ScrimAlpha = 0.12f;
         private const int MoteCount = 7;
         private const float MoteAlpha = 0.045f;
         private const float DayTintDamping = 3f; // seconds to settle toward the target tint

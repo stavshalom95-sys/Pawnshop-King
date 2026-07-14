@@ -968,10 +968,15 @@ namespace PawnshopKing.UI
             customerPanelRect = panel;
             panel.anchorMin = panel.anchorMax = new Vector2(0.5f, 0.5f);
             panel.pivot = new Vector2(0.5f, 0.5f);
-            // Shifted down and shortened to sit over the counter in the room photo,
-            // leaving the painted shelves above it visible instead of covered.
-            panel.anchoredPosition = new Vector2(0f, -88f);
-            panel.sizeDelta = new Vector2(860f, 560f);
+            // Tuned against the real Shop_Empty/Shop_Full art: the painted counter
+            // surface sits in roughly the bottom quarter of frame after the cover-fit
+            // crop, so the panel's BOTTOM edge rests near that line (like a ledger
+            // standing on the counter) and the panel extends upward from there,
+            // leaving the shelves/lamps above it visible. Sparse/Stocked use a
+            // different camera composition, so this is a best-fit compromise, not
+            // a pixel-perfect match for all four.
+            panel.anchoredPosition = new Vector2(0f, 15f);
+            panel.sizeDelta = new Vector2(860f, 600f);
             AddPanelShadow(panel);
 
             // Slightly translucent so the counter reads through at the card's
