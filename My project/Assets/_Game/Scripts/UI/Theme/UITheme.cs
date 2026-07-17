@@ -1,6 +1,5 @@
 using TMPro;
 using UnityEngine;
-using UnityEngine.TextCore.LowLevel;
 
 namespace PawnshopKing.UI
 {
@@ -45,28 +44,13 @@ namespace PawnshopKing.UI
         public const float HebrewCharacterSpacing = 1.5f;
 
         private static TMP_FontAsset headerFont;
+        private static TMP_FontAsset hebrewFont;
 
         /// <summary>
-        /// Forces every cached font to rebuild from scratch. A lazily-cached
-        /// static survives an Editor play session with domain reload disabled —
-        /// meaning a code change to CreateFontAssetGenerous's parameters would
-        /// silently never take effect for anyone testing without a full domain
-        /// reload between changes. Called unconditionally at the very start of
-        /// every play session (see SceneInitializer), which IS guaranteed by
-        /// Unity regardless of domain-reload settings, so this is the one place
-        /// that's safe to assume actually reruns every time.
-        /// </summary>
-        public static void ResetFontCaches()
-        {
-            headerFont = null;
-            hebrewFont = null;
-        }
-
-        /// <summary>
-        /// Typewriter/tech display face for headers, built at runtime from an OS font
-        /// (no editor-authored font assets). Falls back to the TMP default sans.
-        /// Uses Unity's overloaded null check so a destroyed cache (statics survive
-        /// play sessions with domain reload disabled) is rebuilt, not reused.
+        /// Typewriter/tech display face for headers — loaded from a checked-in,
+        /// statically-baked TMP_FontAsset (see Scripts/Editor/FontAssetBaker.cs)
+        /// rather than built at runtime. Falls back to the TMP default sans if
+        /// the asset is somehow missing.
         /// </summary>
         public static TMP_FontAsset HeaderFont
         {
@@ -74,53 +58,27 @@ namespace PawnshopKing.UI
             {
                 if (headerFont != null) return headerFont;
 
-                foreach (var name in new[] { "Consolas", "Courier New", "Lucida Console" })
-                {
-                    var osFont = Font.CreateDynamicFontFromOSFont(name, 32);
-                    if (osFont == null) continue;
+                headerFont = Resources.Load<TMP_FontAsset>("Fonts/HeaderFontAsset");
+                if (headerFont != null) return headerFont;
 
-                    headerFont = CreateFontAssetGenerous(osFont);
-                    if (headerFont != null) return headerFont;
-                }
-
+                Debug.LogWarning("[UITheme] HeaderFontAsset not found — run Tools > Pawnshop King > Bake Font Assets. Falling back to TMP default.");
                 headerFont = TMP_Settings.defaultFontAsset;
                 return headerFont;
             }
         }
 
-        private static TMP_FontAsset hebrewFont;
-
-        // Every character any Hebrew-language string in the game can contain:
-        // the 22 base letters, the 5 final forms (ך ם ן ף ץ — codepoints
-        // interspersed among the base letters, not appended after them),
-        // geresh/gershayim (used in loanwords like "וינטאג'"), digits, space,
-        // and the currency/punctuation set PrepareRtl already treats as a
-        // reversible run. Populated into the atlas up front — see HebrewFont.
-        private const string HebrewGlyphSet =
-            "אבגדהוזחטיכלמנסעפצקרשתךםןףץ" +
-            "0123456789 " +
-            "$%+-±,.~–'\"()[]{}:;!?";
-
         /// <summary>
         /// Hebrew-capable font for localized labels — the TMP default atlas is
-        /// Latin-only and would render tofu. Built from an OS system font
-        /// (Segoe UI on Windows, falling back to Arial/Tahoma) rather than the
-        /// project's bundled Hebrew.ttf: that TTF's own glyph metrics were dense
-        /// enough that even an aggressively padded, oversampled SDF atlas
-        /// (CreateFontAssetGenerous) still rendered overlapping characters at
-        /// small UI sizes — the atlas settings were never the real problem, the
-        /// source font was. System fonts are hinted for small-scale legibility,
-        /// so this uses TMP's own default atlas build (no custom padding or
-        /// sampling overrides).
-        ///
-        /// TryAddCharacters forces every glyph the game can ever display into
-        /// the atlas synchronously, right here, instead of leaving TMP to
-        /// populate each one dynamically the first time it's laid out. Purely
-        /// on-demand population can lay out and render a string in the same
-        /// frame its glyphs are still being rasterized, which is what produced
-        /// wrong-looking characters in already-correct Hebrew strings (letters
-        /// were never reordered — see PrepareRtl, which never touches Hebrew
-        /// codepoints) — pre-warming removes that timing window entirely.
+        /// Latin-only and would render tofu. Loaded from a checked-in,
+        /// statically-baked TMP_FontAsset (see Scripts/Editor/FontAssetBaker.cs)
+        /// built from Segoe UI with every glyph the game uses pre-populated and
+        /// the atlas locked to Static. This project previously built this font
+        /// at runtime, generating and populating its glyph atlas dynamically
+        /// every play session; playtesting turned up real glyph corruption from
+        /// that (wrong or missing individual Hebrew characters inside otherwise
+        /// correctly-ordered words, e.g. "ימים" losing its leading letter to
+        /// render as "מים"). A statically baked asset removes runtime atlas
+        /// population as a variable entirely.
         /// </summary>
         public static TMP_FontAsset HebrewFont
         {
@@ -128,39 +86,14 @@ namespace PawnshopKing.UI
             {
                 if (hebrewFont != null) return hebrewFont;
 
-                foreach (var name in new[] { "Segoe UI", "Arial", "Tahoma" })
-                {
-                    var osFont = Font.CreateDynamicFontFromOSFont(name, 32);
-                    if (osFont == null) continue;
+                hebrewFont = Resources.Load<TMP_FontAsset>("Fonts/HebrewFontAsset");
+                if (hebrewFont != null) return hebrewFont;
 
-                    var candidate = TMP_FontAsset.CreateFontAsset(osFont);
-                    if (candidate == null) continue;
-
-                    candidate.TryAddCharacters(HebrewGlyphSet, out string missing);
-                    if (!string.IsNullOrEmpty(missing))
-                    {
-                        Debug.LogWarning($"[UITheme] Hebrew font '{name}' is missing glyphs: {missing}");
-                    }
-
-                    hebrewFont = candidate;
-                    return hebrewFont;
-                }
-
-                Debug.LogWarning("[UITheme] No Hebrew-capable system font found (tried Segoe UI, Arial, Tahoma) — Hebrew text will render as boxes.");
+                Debug.LogWarning("[UITheme] HebrewFontAsset not found — run Tools > Pawnshop King > Bake Font Assets. Hebrew text will render as boxes.");
                 hebrewFont = TMP_Settings.defaultFontAsset;
                 return hebrewFont;
             }
         }
-
-        /// <summary>
-        /// Builds HeaderFont's monospace display face with extra atlas padding
-        /// and sampling resolution — headers render large, so the bare default
-        /// overload's padding can look thin at that scale. Hebrew no longer
-        /// uses this; see HebrewFont for why a plain default build works better
-        /// for that font.
-        /// </summary>
-        private static TMP_FontAsset CreateFontAssetGenerous(Font sourceFont) =>
-            TMP_FontAsset.CreateFontAsset(sourceFont, 180, 18, GlyphRenderMode.SDFAA, 2048, 2048);
 
         /// <summary>
         /// Prepares mixed Hebrew/Latin text for TMP's isRightToLeftText rendering:

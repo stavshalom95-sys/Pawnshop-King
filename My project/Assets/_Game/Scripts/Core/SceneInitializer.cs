@@ -13,12 +13,6 @@ namespace PawnshopKing.Core
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void SpawnSelf()
         {
-            // Guaranteed to run at the start of every play session by Unity's own
-            // contract, independent of "domain reload on play" — unlike a lazily
-            // cached static, which would otherwise keep serving a font built with
-            // yesterday's parameters until an actual domain reload happens.
-            UI.UITheme.ResetFontCaches();
-
             new GameObject("SceneInitializer").AddComponent<SceneInitializer>();
         }
 
