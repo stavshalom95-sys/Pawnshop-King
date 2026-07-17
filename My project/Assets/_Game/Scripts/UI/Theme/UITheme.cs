@@ -90,20 +90,37 @@ namespace PawnshopKing.UI
 
         private static TMP_FontAsset hebrewFont;
 
+        // Every character any Hebrew-language string in the game can contain:
+        // the 22 base letters, the 5 final forms (ך ם ן ף ץ — codepoints
+        // interspersed among the base letters, not appended after them),
+        // geresh/gershayim (used in loanwords like "וינטאג'"), digits, space,
+        // and the currency/punctuation set PrepareRtl already treats as a
+        // reversible run. Populated into the atlas up front — see HebrewFont.
+        private const string HebrewGlyphSet =
+            "אבגדהוזחטיכלמנסעפצקרשתךםןףץ" +
+            "0123456789 " +
+            "$%+-±,.~–'\"()[]{}:;!?";
+
         /// <summary>
         /// Hebrew-capable font for localized labels — the TMP default atlas is
         /// Latin-only and would render tofu. Built from an OS system font
         /// (Segoe UI on Windows, falling back to Arial/Tahoma) rather than the
         /// project's bundled Hebrew.ttf: that TTF's own glyph metrics were dense
         /// enough that even an aggressively padded, oversampled SDF atlas
-        /// (CreateFontAssetGenerous) still rendered overlapping ("swallowed")
-        /// characters at small UI sizes — the atlas settings were never the real
-        /// problem, the source font was. System fonts are hinted for small-scale
-        /// legibility, so this deliberately uses TMP's own default atlas build
-        /// (TMP_FontAsset.CreateFontAsset(Font), no custom padding/sampling) —
-        /// those defaults are tuned against ordinary system fonts like these.
-        /// Glyph atlases populate dynamically, so no editor-baked TMP asset or
-        /// project font file is required.
+        /// (CreateFontAssetGenerous) still rendered overlapping characters at
+        /// small UI sizes — the atlas settings were never the real problem, the
+        /// source font was. System fonts are hinted for small-scale legibility,
+        /// so this uses TMP's own default atlas build (no custom padding or
+        /// sampling overrides).
+        ///
+        /// TryAddCharacters forces every glyph the game can ever display into
+        /// the atlas synchronously, right here, instead of leaving TMP to
+        /// populate each one dynamically the first time it's laid out. Purely
+        /// on-demand population can lay out and render a string in the same
+        /// frame its glyphs are still being rasterized, which is what produced
+        /// wrong-looking characters in already-correct Hebrew strings (letters
+        /// were never reordered — see PrepareRtl, which never touches Hebrew
+        /// codepoints) — pre-warming removes that timing window entirely.
         /// </summary>
         public static TMP_FontAsset HebrewFont
         {
@@ -116,8 +133,17 @@ namespace PawnshopKing.UI
                     var osFont = Font.CreateDynamicFontFromOSFont(name, 32);
                     if (osFont == null) continue;
 
-                    hebrewFont = TMP_FontAsset.CreateFontAsset(osFont);
-                    if (hebrewFont != null) return hebrewFont;
+                    var candidate = TMP_FontAsset.CreateFontAsset(osFont);
+                    if (candidate == null) continue;
+
+                    candidate.TryAddCharacters(HebrewGlyphSet, out string missing);
+                    if (!string.IsNullOrEmpty(missing))
+                    {
+                        Debug.LogWarning($"[UITheme] Hebrew font '{name}' is missing glyphs: {missing}");
+                    }
+
+                    hebrewFont = candidate;
+                    return hebrewFont;
                 }
 
                 Debug.LogWarning("[UITheme] No Hebrew-capable system font found (tried Segoe UI, Arial, Tahoma) — Hebrew text will render as boxes.");
