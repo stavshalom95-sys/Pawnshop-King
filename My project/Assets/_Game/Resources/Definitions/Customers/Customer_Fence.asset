@@ -40,7 +40,7 @@ MonoBehaviour:
   dialoguePoolHe:
   - אל תשאל מאיפה זה הגיע ואני אעשה מחיר נחמד.
   - מהר ובשקט, ככה אני אוהב.
-  - אתה מזיז את זה מהר, יש עוד מאיפה זה בא.
+  - אם אתה מוכר את זה מהר, יש עוד מאיפה זה בא.
   originHints:
   - They can't tell you a single thing about where it's from.
   - When you reach for the serial number, they suggest you don't bother.
