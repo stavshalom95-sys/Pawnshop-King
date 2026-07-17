@@ -29,15 +29,31 @@ namespace PawnshopKing.UI
     /// TMP's own, so the label is fully initialized either way: immediately, if
     /// the hierarchy was already active when Attach was called, or deferred
     /// until SetActive(true), if it wasn't.
+    ///
+    /// Measurement itself: GetPreferredValues(text, 0, 0) queries a HYPOTHETICAL
+    /// string against the font's metrics table, which can under-measure on a
+    /// dynamically-generated atlas (UITheme.HebrewFont is built at runtime, not
+    /// pre-baked) if the glyphs for that specific string haven't been rasterized
+    /// into the atlas yet at the moment of the query — this was still leaving
+    /// Hebrew labels like "סרב" a few pixels tight. ForceMeshUpdate + reading
+    /// TMP's own preferredWidth instead measures the ACTUAL generated mesh for
+    /// the text/font combination that's really assigned, not a prediction, so
+    /// it can never disagree with what's actually rendered. Font is now also
+    /// tracked alongside text, since a language switch changes both together and
+    /// either one alone should trigger a re-measure.
     /// </summary>
     public class ButtonAutoWidth : MonoBehaviour
     {
-        private const float HorizontalPadding = 24f;
+        // Hebrew glyphs commonly carry more side-bearing than Latin at the same
+        // point size — generous on purpose, since "still a little tight" is the
+        // failure mode being fixed here.
+        private const float HorizontalPadding = 36f;
 
         private TextMeshProUGUI label;
         private LayoutElement layoutElement;
         private float minWidth;
         private string lastMeasuredText;
+        private TMP_FontAsset lastMeasuredFont;
 
         public static void Attach(TextMeshProUGUI label, LayoutElement layoutElement, float minWidth)
         {
@@ -54,10 +70,13 @@ namespace PawnshopKing.UI
         private void Refresh()
         {
             if (label == null || layoutElement == null) return;
-            if (label.text == lastMeasuredText) return;
+            if (label.text == lastMeasuredText && label.font == lastMeasuredFont) return;
 
             lastMeasuredText = label.text;
-            float preferredTextWidth = label.GetPreferredValues(label.text, 0f, 0f).x;
+            lastMeasuredFont = label.font;
+
+            label.ForceMeshUpdate();
+            float preferredTextWidth = label.preferredWidth;
             layoutElement.preferredWidth = Mathf.Max(minWidth, preferredTextWidth + HorizontalPadding);
         }
     }
