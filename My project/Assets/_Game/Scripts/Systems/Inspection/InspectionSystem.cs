@@ -134,7 +134,9 @@ namespace PawnshopKing.Systems.Inspection
                 }
                 else
                 {
-                    AddClue(item, revealed, PickNew(ConditionMisses, item) ?? "Still no clear read on its condition.");
+                    AddClue(item, revealed, PickNew(ConditionMisses, item) ?? (LanguageManager.IsRtl
+                        ? "עדיין אין קריאה ברורה על מצב הפריט."
+                        : "Still no clear read on its condition."));
                 }
 
                 TryAddOriginHint(item, archetype, revealed);
@@ -146,7 +148,10 @@ namespace PawnshopKing.Systems.Inspection
             {
                 item.playerKnowledge |= KnowledgeFlags.ValueAppraised;
                 GetValueEstimate(state, item, out int low, out int high);
-                AddClue(item, revealed, $"You'd put it somewhere around ${low:N0}–${high:N0}.");
+                string estimate = LanguageManager.IsRtl
+                    ? $"אתה מעריך את זה בסביבות ${low:N0}–${high:N0}."
+                    : $"You'd put it somewhere around ${low:N0}–${high:N0}.";
+                AddClue(item, revealed, estimate);
                 TryAddOriginHint(item, archetype, revealed);
                 return revealed;
             }
@@ -162,7 +167,9 @@ namespace PawnshopKing.Systems.Inspection
             else if (fakeTell) clue = PickNew(FakeTells, item);
             else if (stolenTell) clue = PickNew(StolenTells, item);
 
-            clue ??= PickNew(NothingTells, item) ?? "Nothing new catches your eye.";
+            clue ??= PickNew(NothingTells, item) ?? (LanguageManager.IsRtl
+                ? "שום דבר חדש לא בולט לעין."
+                : "Nothing new catches your eye.");
             AddClue(item, revealed, clue);
             return revealed;
         }

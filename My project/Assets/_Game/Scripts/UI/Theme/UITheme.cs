@@ -1,5 +1,6 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.TextCore.LowLevel;
 
 namespace PawnshopKing.UI
 {
@@ -38,6 +39,11 @@ namespace PawnshopKing.UI
         // ---- Typography ----
         public const float HeaderCharacterSpacing = 5f;
 
+        // Modest, not a stylistic effect like the header spacing above — just
+        // enough breathing room that dense Hebrew paragraphs (item descriptions
+        // in particular) don't read as visually cramped at 20pt body size.
+        public const float HebrewCharacterSpacing = 1.5f;
+
         private static TMP_FontAsset headerFont;
 
         /// <summary>
@@ -57,7 +63,7 @@ namespace PawnshopKing.UI
                     var osFont = Font.CreateDynamicFontFromOSFont(name, 32);
                     if (osFont == null) continue;
 
-                    headerFont = TMP_FontAsset.CreateFontAsset(osFont);
+                    headerFont = CreateFontAssetGenerous(osFont);
                     if (headerFont != null) return headerFont;
                 }
 
@@ -110,7 +116,7 @@ namespace PawnshopKing.UI
                     var osFont = Font.CreateDynamicFontFromOSFont(name, 32);
                     if (osFont == null) continue;
 
-                    hebrewFont = TMP_FontAsset.CreateFontAsset(osFont);
+                    hebrewFont = CreateFontAssetGenerous(osFont);
                     if (hebrewFont != null)
                     {
                         Debug.LogWarning("[UITheme] Using OS font fallback for Hebrew — drop a static-weight TTF at Resources/Fonts/Hebrew.ttf for consistent cross-platform rendering.");
@@ -127,8 +133,20 @@ namespace PawnshopKing.UI
         private static TMP_FontAsset TryCreateProjectHebrewFont()
         {
             var projectFont = Resources.Load<Font>("Fonts/Hebrew");
-            return projectFont != null ? TMP_FontAsset.CreateFontAsset(projectFont) : null;
+            return projectFont != null ? CreateFontAssetGenerous(projectFont) : null;
         }
+
+        /// <summary>
+        /// TMP_FontAsset.CreateFontAsset(Font) alone uses whatever bare defaults
+        /// that overload falls back to — for Hebrew specifically, the resulting
+        /// atlas padding was too tight for the font's natural glyph proportions,
+        /// so adjacent letters visually bled into each other ("swallowed" runs of
+        /// text) once a paragraph-length string forced denser packing. Building
+        /// with an explicit, generous padding and a proper SDF sampling size
+        /// fixes the glyphs themselves, not just their surrounding layout.
+        /// </summary>
+        private static TMP_FontAsset CreateFontAssetGenerous(Font sourceFont) =>
+            TMP_FontAsset.CreateFontAsset(sourceFont, 90, 9, GlyphRenderMode.SDFAA, 1024, 1024);
 
         /// <summary>
         /// Prepares mixed Hebrew/Latin text for TMP's isRightToLeftText rendering:
@@ -161,7 +179,11 @@ namespace PawnshopKing.UI
         {
             // Rich-text tags (<color=...>, <size=...>) match first and pass through
             // untouched — reversing their contents would break TMP's parser.
-            const string runChars = "A-Za-z0-9$%+\\-±,.";
+            // "–" (en dash) and "~" cover value-range clues like "~$320–$440" —
+            // without them the dash/tilde fall outside the reversible run and
+            // land on the wrong side of the numbers after TMP's own reversal,
+            // same failure mode the ASCII hyphen fix addressed for signed deltas.
+            const string runChars = "A-Za-z0-9$%+\\-±,.~–";
             return System.Text.RegularExpressions.Regex.Replace(
                 text,
                 $"<[^>]*>|[{runChars}][{runChars} ]*[{runChars}]|[{runChars}]|[()\\[\\]{{}}]",

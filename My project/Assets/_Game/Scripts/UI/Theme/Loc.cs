@@ -24,6 +24,15 @@ namespace PawnshopKing.UI
             label.font = rtl
                 ? UITheme.HebrewFont
                 : (englishFont != null ? englishFont : TMP_Settings.defaultFontAsset);
+
+            // Header-styled labels (CreateText's header:true) get their spacing
+            // set once at creation; re-derive it here rather than reset to 0, or
+            // switching languages would silently strip the typewriter look the
+            // first time this runs in English. Everything else gets Hebrew's
+            // modest breathing-room boost only when actually rendering RTL.
+            float englishSpacing = englishFont == UITheme.HeaderFont ? UITheme.HeaderCharacterSpacing : 0f;
+            label.characterSpacing = rtl ? UITheme.HebrewCharacterSpacing : englishSpacing;
+
             label.text = rtl ? UITheme.PrepareRtl(text) : text;
         }
     }

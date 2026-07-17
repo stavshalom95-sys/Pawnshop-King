@@ -184,6 +184,7 @@ namespace PawnshopKing.Systems.Localization
             public const string DebtPayPlaceholder = "debt_pay_placeholder";
 
             public const string DayBarLabel = "day_bar_label";               // {0} = day number
+            public const string CashBarLabel = "cash_bar_label";             // {0} = amount
             public const string ReputationBarLabel = "reputation_bar_label"; // {0} = value
             public const string HeatBarLabel = "heat_bar_label";             // {0} = value
             public const string DebtBarLabel = "debt_bar_label";             // {0} = owed, {1} = due, {2} = days
@@ -251,6 +252,14 @@ namespace PawnshopKing.Systems.Localization
             public const string EffectFakeDetection = "effect_fake_detection";
             public const string EffectValueAccuracy = "effect_value_accuracy";
             public const string EffectTool = "effect_tool";
+
+            public const string ShopOpenName = "shop_open_name";
+            public const string ShopClosedName = "shop_closed_name";
+            public const string WaitingForFirstCustomer = "waiting_for_first_customer";
+            public const string DayIsOver = "day_is_over";                     // {0} = day number
+            public const string QueueCustomersToday = "queue_customers_today"; // {0} = count
+            public const string QueueLastCustomer = "queue_last_customer";
+            public const string QueueMoreWaiting = "queue_more_waiting";       // {0} = count
 
             public const string MoodAskingLine = "mood_asking_line"; // {0} = mood, {1} = asking price
             public const string MoodOnlyLine = "mood_only_line";     // {0} = mood
@@ -350,6 +359,7 @@ namespace PawnshopKing.Systems.Localization
             [Keys.DebtPayPlaceholder] = "amount $",
 
             [Keys.DayBarLabel] = "Day {0}",
+            [Keys.CashBarLabel] = "Cash  ${0}",
             [Keys.ReputationBarLabel] = "Rep  {0}",
             [Keys.HeatBarLabel] = "Heat  {0}",
             [Keys.DebtBarLabel] = "Debt  ${0}  (${1} due in {2}d)",
@@ -414,6 +424,14 @@ namespace PawnshopKing.Systems.Localization
             [Keys.EffectFakeDetection] = "Inspection · Counterfeits",
             [Keys.EffectValueAccuracy] = "Inspection · Valuation",
             [Keys.EffectTool] = "Tool",
+
+            [Keys.ShopOpenName] = "Shop is open",
+            [Keys.ShopClosedName] = "Shop closed",
+            [Keys.WaitingForFirstCustomer] = "Waiting for the first customer...",
+            [Keys.DayIsOver] = "Day {0} is over. The debt clock ticks on.",
+            [Keys.QueueCustomersToday] = "{0} customers in the queue today",
+            [Keys.QueueLastCustomer] = "Last customer of the day",
+            [Keys.QueueMoreWaiting] = "{0} more waiting outside",
 
             [Keys.MoodAskingLine] = "Mood: {0}     Asking: {1}",
             [Keys.MoodOnlyLine] = "Mood: {0}",
@@ -513,6 +531,7 @@ namespace PawnshopKing.Systems.Localization
             [Keys.DebtPayPlaceholder] = "סכום $",
 
             [Keys.DayBarLabel] = "יום {0}",
+            [Keys.CashBarLabel] = "מזומן  ${0}",
             [Keys.ReputationBarLabel] = "מוניטין  {0}",
             [Keys.HeatBarLabel] = "חום  {0}",
             [Keys.DebtBarLabel] = "חוב  ${0}  (${1} בעוד {2} ימים)",
@@ -577,6 +596,14 @@ namespace PawnshopKing.Systems.Localization
             [Keys.EffectFakeDetection] = "בדיקה · זיופים",
             [Keys.EffectValueAccuracy] = "בדיקה · הערכת שווי",
             [Keys.EffectTool] = "כלי",
+
+            [Keys.ShopOpenName] = "החנות פתוחה",
+            [Keys.ShopClosedName] = "החנות סגורה",
+            [Keys.WaitingForFirstCustomer] = "ממתין ללקוח הראשון...",
+            [Keys.DayIsOver] = "יום {0} הסתיים. שעון החוב ממשיך לתקתק.",
+            [Keys.QueueCustomersToday] = "{0} לקוחות בתור היום",
+            [Keys.QueueLastCustomer] = "הלקוח האחרון של היום",
+            [Keys.QueueMoreWaiting] = "עוד {0} מחכים בחוץ",
 
             [Keys.MoodAskingLine] = "מצב רוח: {0}     מבוקש: {1}",
             [Keys.MoodOnlyLine] = "מצב רוח: {0}",

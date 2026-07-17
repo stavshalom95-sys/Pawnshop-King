@@ -145,7 +145,11 @@ namespace PawnshopKing.UI
             foreach (var row in itemRows) RefreshItemRow(row);
             UpdateTip();
             if (currentCustomer != null) UpdateMoodAskingLine();
-            if (gm.State != null) RenderTopBar(gm.State);
+            if (gm.State != null)
+            {
+                RenderTopBar(gm.State);
+                if (cashShown != int.MinValue) Loc.Set(cashText, Loc.F(LanguageManager.Keys.CashBarLabel, cashShown.ToString("N0")));
+            }
         }
 
         private void Update()
@@ -208,13 +212,13 @@ namespace PawnshopKing.UI
             if (cashShown == int.MinValue) // first paint: no animation
             {
                 cashShown = target;
-                cashText.text = $"Cash  ${target:N0}";
+                Loc.Set(cashText, Loc.F(LanguageManager.Keys.CashBarLabel, target.ToString("N0")));
                 return;
             }
 
             if (target == cashShown && cashTickRoutine == null)
             {
-                cashText.text = $"Cash  ${target:N0}";
+                Loc.Set(cashText, Loc.F(LanguageManager.Keys.CashBarLabel, target.ToString("N0")));
                 return;
             }
 
@@ -231,12 +235,12 @@ namespace PawnshopKing.UI
                 elapsed += Time.unscaledDeltaTime;
                 float t = Mathf.Clamp01(elapsed / duration);
                 cashShown = Mathf.RoundToInt(Mathf.Lerp(from, to, 1f - (1f - t) * (1f - t)));
-                cashText.text = $"Cash  ${cashShown:N0}";
+                Loc.Set(cashText, Loc.F(LanguageManager.Keys.CashBarLabel, cashShown.ToString("N0")));
                 yield return null;
             }
 
             cashShown = to;
-            cashText.text = $"Cash  ${to:N0}";
+            Loc.Set(cashText, Loc.F(LanguageManager.Keys.CashBarLabel, to.ToString("N0")));
 
             // Settle flash: brighten to the focus gold, then ease home.
             float flash = 0f;
@@ -257,7 +261,7 @@ namespace PawnshopKing.UI
             StopCoroutine(cashTickRoutine);
             cashTickRoutine = null;
             cashShown = gm.State.cash;
-            cashText.text = $"Cash  ${cashShown:N0}";
+            Loc.Set(cashText, Loc.F(LanguageManager.Keys.CashBarLabel, cashShown.ToString("N0")));
             cashText.color = UITheme.Gold;
         }
 
@@ -343,14 +347,14 @@ namespace PawnshopKing.UI
         {
             currentCustomer = null;
             currentArchetype = null;
-            customerNameText.text = "Shop is open";
+            Loc.Set(customerNameText, Loc.T(LanguageManager.Keys.ShopOpenName), UITheme.HeaderFont);
             customerMoodText.text = string.Empty;
-            SetDialogueInstant("Waiting for the first customer...");
+            SetDialogueInstant(Loc.T(LanguageManager.Keys.WaitingForFirstCustomer));
             DisarmOffer();
             ClearItemRows();
             dealControls.SetActive(false);
             dealFeedbackText.text = string.Empty;
-            queueText.text = $"{gm.Day.CustomersRemaining} customers in the queue today";
+            Loc.Set(queueText, Loc.F(LanguageManager.Keys.QueueCustomersToday, gm.Day.CustomersRemaining));
             RefreshActionButton();
             UpdateTip();
             Debug.Log($"[HUD] Day {day} started — {gm.Day.CustomersRemaining} customers queued, action button shows '{actionLabel.text}'.");
@@ -373,9 +377,9 @@ namespace PawnshopKing.UI
             Loc.Set(dealFeedbackText, tradable ? string.Empty : Loc.T(LanguageManager.Keys.DealNothingToTrade));
             RefreshBuyLabel();
 
-            queueText.text = gm.Day.CustomersRemaining == 0
-                ? "Last customer of the day"
-                : $"{gm.Day.CustomersRemaining} more waiting outside";
+            Loc.Set(queueText, gm.Day.CustomersRemaining == 0
+                ? Loc.T(LanguageManager.Keys.QueueLastCustomer)
+                : Loc.F(LanguageManager.Keys.QueueMoreWaiting, gm.Day.CustomersRemaining));
             RefreshActionButton();
             UpdateTip();
 
@@ -385,9 +389,9 @@ namespace PawnshopKing.UI
 
         private void OnDayEnded(int day)
         {
-            customerNameText.text = "Shop closed";
+            Loc.Set(customerNameText, Loc.T(LanguageManager.Keys.ShopClosedName), UITheme.HeaderFont);
             customerMoodText.text = string.Empty;
-            SetDialogueInstant($"Day {day} is over. The debt clock ticks on.");
+            SetDialogueInstant(Loc.F(LanguageManager.Keys.DayIsOver, day));
             DisarmOffer();
             ClearItemRows();
             dealControls.SetActive(false);
