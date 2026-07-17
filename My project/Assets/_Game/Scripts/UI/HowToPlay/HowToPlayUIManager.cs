@@ -1,3 +1,4 @@
+using PawnshopKing.Core;
 using PawnshopKing.Systems.Localization;
 using TMPro;
 using UnityEngine;
@@ -7,16 +8,20 @@ namespace PawnshopKing.UI
 {
     /// <summary>
     /// Self-contained "How to Play" overlay: a scrollable list of short
-    /// mechanic explanations (inspecting, haggling, Mood, Value), reachable
-    /// from both the Main Menu and the Pause Menu. Doesn't touch game state —
-    /// purely explanatory, so it doesn't freeze time or need its own pause
-    /// logic; opening it over a paused game just layers on top.
+    /// mechanic explanations (inspecting, haggling, Mood, Value). Opens
+    /// automatically once at the start of every new campaign (subscribed to
+    /// GameManager.NewCampaignStarted, fired before the first customer can
+    /// possibly appear), and is also reachable manually from the Main Menu
+    /// and Pause Menu for reference later. Doesn't touch game state — purely
+    /// explanatory, so it doesn't freeze time or need its own pause logic;
+    /// opening it over a paused game just layers on top.
     /// </summary>
     public class HowToPlayUIManager : MonoBehaviour
     {
         public static HowToPlayUIManager Instance { get; private set; }
 
         private GameObject screenRoot;
+        private RectTransform sectionsContent;
 
         public bool IsOpen => screenRoot != null && screenRoot.activeSelf;
 
@@ -24,17 +29,30 @@ namespace PawnshopKing.UI
         {
             Instance = this;
             BuildScreen();
+
+            if (GameManager.Instance != null) GameManager.Instance.NewCampaignStarted += Open;
         }
 
         private void OnDestroy()
         {
             if (Instance == this) Instance = null;
+            if (GameManager.Instance != null) GameManager.Instance.NewCampaignStarted -= Open;
         }
 
         public void Open()
         {
             screenRoot.SetActive(true);
             UIFx.FadeIn(this, screenRoot);
+
+            // Sections were built (and their localized text set) once, back when
+            // this screen was constructed inactive-about-to-toggle — before the
+            // nested VerticalLayoutGroups had converged on real widths. TMP wraps
+            // and right-aligns against whatever width it had at that moment, so
+            // without this the first-ever Open() renders with the start of every
+            // RTL line clipped off. Refreshing on every Open is cheap and matches
+            // how every other screen in this project relayouts after localized
+            // text changes (see PauseMenuUIManager.RefreshDynamicSettings).
+            LayoutRebuilder.ForceRebuildLayoutImmediate(sectionsContent);
         }
 
         public void Close() => screenRoot.SetActive(false);
@@ -130,6 +148,7 @@ namespace PawnshopKing.UI
             layout.childForceExpandHeight = false;
 
             contentGO.GetComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            sectionsContent = content;
 
             var scroll = scrollGO.GetComponent<ScrollRect>();
             scroll.viewport = viewport;

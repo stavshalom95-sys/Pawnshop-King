@@ -40,6 +40,13 @@ namespace PawnshopKing.Core
 
         public event Action<GamePhase> PhaseChanged;
 
+        /// <summary>Fires once at the very start of a brand-new campaign, before BeginDay
+        /// builds the first queue — the correct hook for anything that must run before
+        /// the player can possibly see a customer (e.g. a first-time how-to-play prompt).
+        /// Not raised by ContinueFromSave; an existing save means the player has already
+        /// been through this.</summary>
+        public event Action NewCampaignStarted;
+
         private void Awake()
         {
             if (Instance != null && Instance != this)
@@ -56,6 +63,8 @@ namespace PawnshopKing.Core
         /// <summary>Creates a fresh campaign starting in debt (GDD 40). Single save slot: the old campaign's save is erased.</summary>
         public void StartNewGame()
         {
+            NewCampaignStarted?.Invoke();
+
             SaveLoadSystem.Delete();
 
             State = new GameState
