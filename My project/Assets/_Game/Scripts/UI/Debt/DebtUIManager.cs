@@ -159,7 +159,7 @@ namespace PawnshopKing.UI
             layout.childForceExpandHeight = false;
 
             titleText = HUDUIManager.CreateText(panel, "Title", 30f, TextAlignmentOptions.Left, FontStyles.Bold, header: true);
-            infoText = HUDUIManager.CreateText(panel, "Info", 21f, TextAlignmentOptions.Left);
+            infoText = HUDUIManager.CreateText(panel, "Info", 21f, TextAlignmentOptions.Left, wrap: true);
             infoText.color = HUDUIManager.MutedColor;
 
             var inputRow = new GameObject("InputRow", typeof(RectTransform), typeof(HorizontalLayoutGroup));

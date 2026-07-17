@@ -110,7 +110,7 @@ namespace PawnshopKing.UI
             // Same category glyph as the counter, so items stay recognizable here.
             UIIcons.CreateIconChip(rowGO.transform, ItemGenerator.GetDefinition(item.definitionId));
 
-            var info = HUDUIManager.CreateText(rowGO.transform, "Info", 20f, TextAlignmentOptions.Left);
+            var info = HUDUIManager.CreateText(rowGO.transform, "Info", 20f, TextAlignmentOptions.Left, wrap: true);
             info.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
             Loc.Set(info, BuildInfo(item));
 

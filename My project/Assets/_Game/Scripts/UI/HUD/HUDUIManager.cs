@@ -818,7 +818,7 @@ namespace PawnshopKing.UI
             // Category glyph so the item reads at a glance, before the name does.
             UIIcons.CreateIconChip(rowGO.transform, ItemGenerator.GetDefinition(item.definitionId));
 
-            row.infoText = CreateText(rowGO.transform, "Info", 20f, TextAlignmentOptions.Left);
+            row.infoText = CreateText(rowGO.transform, "Info", 20f, TextAlignmentOptions.Left, wrap: true);
             row.infoText.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
 
             var buttonGO = new GameObject("InspectButton", typeof(RectTransform), typeof(Image), typeof(Button));
@@ -1310,7 +1310,7 @@ namespace PawnshopKing.UI
         }
 
         internal static TextMeshProUGUI CreateText(Transform parent, string name, float size,
-            TextAlignmentOptions alignment, FontStyles style = FontStyles.Normal, bool header = false)
+            TextAlignmentOptions alignment, FontStyles style = FontStyles.Normal, bool header = false, bool wrap = false)
         {
             var go = new GameObject(name, typeof(RectTransform));
             go.transform.SetParent(parent, false);
@@ -1325,6 +1325,16 @@ namespace PawnshopKing.UI
             // in particular) can run longer than the English baseline a container
             // was sized for, and overflow (visible) beats truncate (silently gone).
             text.overflowMode = TextOverflowModes.Overflow;
+            // Most labels here are one short logical line (a name, a mood line, a
+            // single dialogue blurb) and were never meant to wrap — they rely on
+            // Overflow above to just run wide instead. TMP's line-breaking, left
+            // at its default here, was inserting a break inside single Hebrew
+            // words with no space to break at (no wrap was actually needed by
+            // container width — this showed up as a stray gap splitting an
+            // otherwise-intact word, e.g. "נואש" rendering as "נו  אש"). Only
+            // labels that build genuinely multi-line content themselves (row
+            // info/clue blocks, day-summary body) opt into wrap explicitly.
+            text.textWrappingMode = wrap ? TextWrappingModes.Normal : TextWrappingModes.NoWrap;
             if (header && UITheme.HeaderFont != null)
             {
                 text.font = UITheme.HeaderFont;

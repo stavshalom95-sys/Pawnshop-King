@@ -480,7 +480,7 @@ namespace PawnshopKing.UI
             layout.childForceExpandHeight = false;
 
             titleText = HUDUIManager.CreateText(panel, "Title", 34f, TextAlignmentOptions.Left, FontStyles.Bold, header: true);
-            bodyText = HUDUIManager.CreateText(panel, "Body", 24f, TextAlignmentOptions.Left);
+            bodyText = HUDUIManager.CreateText(panel, "Body", 24f, TextAlignmentOptions.Left, wrap: true);
 
             var spacer = new GameObject("Spacer", typeof(RectTransform), typeof(LayoutElement));
             spacer.transform.SetParent(panel, false);

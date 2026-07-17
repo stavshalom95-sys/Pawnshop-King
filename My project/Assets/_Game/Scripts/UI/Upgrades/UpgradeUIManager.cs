@@ -111,7 +111,7 @@ namespace PawnshopKing.UI
             layout.childForceExpandWidth = false;
             layout.childForceExpandHeight = false;
 
-            var info = HUDUIManager.CreateText(rowGO.transform, "Info", 20f, TextAlignmentOptions.Left);
+            var info = HUDUIManager.CreateText(rowGO.transform, "Info", 20f, TextAlignmentOptions.Left, wrap: true);
             info.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
             Loc.Set(info, BuildInfo(upgrade));
 
