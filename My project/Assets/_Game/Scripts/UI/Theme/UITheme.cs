@@ -39,12 +39,28 @@ namespace PawnshopKing.UI
         // ---- Typography ----
         public const float HeaderCharacterSpacing = 5f;
 
-        // Modest, not a stylistic effect like the header spacing above — just
-        // enough breathing room that dense Hebrew paragraphs (item descriptions
-        // in particular) don't read as visually cramped at 20pt body size.
-        public const float HebrewCharacterSpacing = 1.5f;
+        // Deliberately generous, not subtle — a direct, visible response to
+        // reported glyph-overlap, not a cosmetic nudge.
+        public const float HebrewCharacterSpacing = 4f;
 
         private static TMP_FontAsset headerFont;
+
+        /// <summary>
+        /// Forces every cached font to rebuild from scratch. A lazily-cached
+        /// static survives an Editor play session with domain reload disabled —
+        /// meaning a code change to CreateFontAssetGenerous's parameters would
+        /// silently never take effect for anyone testing without a full domain
+        /// reload between changes. Called unconditionally at the very start of
+        /// every play session (see SceneInitializer), which IS guaranteed by
+        /// Unity regardless of domain-reload settings, so this is the one place
+        /// that's safe to assume actually reruns every time.
+        /// </summary>
+        public static void ResetFontCaches()
+        {
+            headerFont = null;
+            hebrewFont = null;
+            hebrewFontFromProject = false;
+        }
 
         /// <summary>
         /// Typewriter/tech display face for headers, built at runtime from an OS font
@@ -146,7 +162,7 @@ namespace PawnshopKing.UI
         /// fixes the glyphs themselves, not just their surrounding layout.
         /// </summary>
         private static TMP_FontAsset CreateFontAssetGenerous(Font sourceFont) =>
-            TMP_FontAsset.CreateFontAsset(sourceFont, 90, 9, GlyphRenderMode.SDFAA, 1024, 1024);
+            TMP_FontAsset.CreateFontAsset(sourceFont, 180, 18, GlyphRenderMode.SDFAA, 2048, 2048);
 
         /// <summary>
         /// Prepares mixed Hebrew/Latin text for TMP's isRightToLeftText rendering:

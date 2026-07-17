@@ -310,7 +310,25 @@ namespace PawnshopKing.UI
 
         private void StartDialogueTypewriter(string line)
         {
-            if (dialogueRoutine != null) StopCoroutine(dialogueRoutine);
+            if (dialogueRoutine != null)
+            {
+                StopCoroutine(dialogueRoutine);
+                dialogueRoutine = null;
+            }
+
+            // maxVisibleCharacters reveals by array index — correct in principle
+            // for isRightToLeftText (index 0 already renders rightmost), but that
+            // was never actually verified against a running RTL layout, only
+            // reasoned through. Rather than leave an unverified animation in the
+            // middle of a reported rendering bug, Hebrew skips straight to the
+            // fully-revealed steady state, which IS verified; English keeps the
+            // typewriter effect.
+            if (LanguageManager.IsRtl)
+            {
+                SetDialogueInstant(line);
+                return;
+            }
+
             Loc.Set(customerDialogueText, line);
             customerDialogueText.maxVisibleCharacters = 0;
             dialogueRoutine = StartCoroutine(DialogueRoutine());
