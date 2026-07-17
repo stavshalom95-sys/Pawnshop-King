@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   id: amateur_scammer
   displayName: Amateur Scammer
+  displayNameHe: רמאי חובבן
   patienceRange:
     min: 0.2
     max: 0.5
@@ -36,7 +37,15 @@ MonoBehaviour:
   - It's one hundred percent genuine, I had the certificate somewhere.
   - Look, I'm in a hurry, can we do this fast?
   - A friend of mine sold one just like it for triple.
+  dialoguePoolHe:
+  - זה מאה אחוז אותנטי, הייתה לי תעודה איפשהו.
+  - תשמע, אני ממהר, אפשר לעשות את זה מהר?
+  - חבר שלי מכר אחד בדיוק כזה בשלוש פעמים המחיר.
   originHints:
   - They keep insisting it's genuine before you've even asked.
   - The story about where they got it changes mid-sentence.
   - They watch your face while you handle it, not the item.
+  originHintsHe:
+  - הוא ממשיך להתעקש שזה אותנטי עוד לפני ששאלת.
+  - הסיפור על איפה הוא השיג את זה משתנה באמצע המשפט.
+  - הוא צופה בפנים שלך בזמן שאתה בודק, לא בפריט.

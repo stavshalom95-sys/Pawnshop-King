@@ -16,6 +16,8 @@ MonoBehaviour:
   displayName: Military Field Watch
   description: Wartime issue with a worn canvas strap. Collectors pay well for the
     real thing.
+  displayNameHe: שעון שדה צבאי
+  descriptionHe: שעון מתקופת מלחמה עם רצועת בד שחוקה. אספנים משלמים היטב על הפריט האמיתי.
   brandOrMaker: Corvus
   era: 1944
   category: 0

@@ -113,7 +113,7 @@ namespace PawnshopKing.UI
 
             var info = HUDUIManager.CreateText(rowGO.transform, "Info", 20f, TextAlignmentOptions.Left);
             info.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
-            info.text = BuildInfo(upgrade);
+            Loc.Set(info, BuildInfo(upgrade));
 
             bool isOwned = UpgradeSystem.IsOwned(gm.State, upgrade.id);
             bool canAfford = gm.State.cash >= upgrade.cost;
@@ -143,15 +143,29 @@ namespace PawnshopKing.UI
         private void OnBuyClicked(UpgradeDefinition upgrade)
         {
             var result = UpgradeSystem.TryPurchase(gm.State, upgrade);
-            feedbackText.text = result.message;
+            Loc.Set(feedbackText, ComposePurchaseMessage(upgrade, result));
             RebuildList();
+        }
+
+        private static string ComposePurchaseMessage(UpgradeDefinition upgrade, PurchaseResult result)
+        {
+            switch (result.outcome)
+            {
+                case PurchaseOutcome.AlreadyOwned:
+                    return Loc.F(LanguageManager.Keys.UpgradeAlreadyOwned, upgrade.LocalizedDisplayName);
+                case PurchaseOutcome.InsufficientFunds:
+                    return Loc.F(LanguageManager.Keys.UpgradeCantAfford, upgrade.LocalizedDisplayName,
+                        upgrade.cost.ToString("N0"), GameManager.Instance.State.cash.ToString("N0"));
+                default:
+                    return Loc.F(LanguageManager.Keys.UpgradeInstalled, upgrade.LocalizedDisplayName, upgrade.cost.ToString("N0"));
+            }
         }
 
         private static string BuildInfo(UpgradeDefinition upgrade)
         {
             var sb = new StringBuilder();
-            sb.Append($"{upgrade.displayName}   <color=#9E9A90>{EffectLabel(upgrade.effect)}</color>");
-            sb.Append($"\n<size=85%><color=#B8B4AA>{upgrade.description}</color></size>");
+            sb.Append($"{upgrade.LocalizedDisplayName}   <color=#9E9A90>{EffectLabel(upgrade.effect)}</color>");
+            sb.Append($"\n<size=85%><color=#B8B4AA>{upgrade.LocalizedDescription}</color></size>");
             return sb.ToString();
         }
 
@@ -159,10 +173,10 @@ namespace PawnshopKing.UI
         {
             switch (effect)
             {
-                case UpgradeEffect.ConditionAccuracy: return "Inspection · Condition";
-                case UpgradeEffect.FakeDetection: return "Inspection · Counterfeits";
-                case UpgradeEffect.ValueAccuracy: return "Inspection · Valuation";
-                default: return "Tool";
+                case UpgradeEffect.ConditionAccuracy: return Loc.T(LanguageManager.Keys.EffectConditionAccuracy);
+                case UpgradeEffect.FakeDetection: return Loc.T(LanguageManager.Keys.EffectFakeDetection);
+                case UpgradeEffect.ValueAccuracy: return Loc.T(LanguageManager.Keys.EffectValueAccuracy);
+                default: return Loc.T(LanguageManager.Keys.EffectTool);
             }
         }
 

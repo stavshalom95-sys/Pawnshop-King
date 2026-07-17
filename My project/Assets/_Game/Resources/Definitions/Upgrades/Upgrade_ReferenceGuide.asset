@@ -16,6 +16,8 @@ MonoBehaviour:
   displayName: Antique Reference Guide
   description: Dog-eared price catalogues and auction records. Your value estimates
     land in a noticeably tighter band around the truth.
+  displayNameHe: מדריך עתיקות
+  descriptionHe: קטלוגי מחירים משומשים ורשומות מכירות פומביות. הערכות השווי שלך נופלות בטווח הדוק בהרבה סביב האמת.
   cost: 300
   effect: 2
   magnitude: 0.4

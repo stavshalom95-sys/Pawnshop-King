@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   id: casual_seller
   displayName: Casual Home Seller
+  displayNameHe: מוכר ביתי מזדמן
   patienceRange:
     min: 0.5
     max: 0.9
@@ -36,3 +37,7 @@ MonoBehaviour:
   - Found this while clearing out my aunt's attic. Any good?
   - No idea what it's worth, honestly.
   - If you don't want it, I'll probably just throw it out.
+  dialoguePoolHe:
+  - מצאתי את זה כשפיניתי את עליית הגג של הדודה שלי. שווה משהו?
+  - אין לי מושג כמה זה שווה, בכנות.
+  - אם אתה לא רוצה את זה, כנראה שפשוט אזרוק את זה.

@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   id: fence
   displayName: Professional Fence
+  displayNameHe: סוחר גנוב מקצועי
   patienceRange:
     min: 0.4
     max: 0.8
@@ -36,7 +37,15 @@ MonoBehaviour:
   - Don't ask where it came from and I'll make the price nice.
   - Quick and quiet, that's how I like it.
   - You move this fast, there's more where it came from.
+  dialoguePoolHe:
+  - אל תשאל מאיפה זה הגיע ואני אעשה מחיר נחמד.
+  - מהר ובשקט, ככה אני אוהב.
+  - אתה מזיז את זה מהר, יש עוד מאיפה זה בא.
   originHints:
   - They can't tell you a single thing about where it's from.
   - When you reach for the serial number, they suggest you don't bother.
   - They want it gone tonight, price be damned.
+  originHintsHe:
+  - הוא לא יכול לספר לך שום דבר על המקור.
+  - כשאתה מנסה לבדוק את המספר הסידורי, הוא מציע לך לא לטרוח.
+  - הוא רוצה שזה ייעלם הלילה, לא משנה המחיר.

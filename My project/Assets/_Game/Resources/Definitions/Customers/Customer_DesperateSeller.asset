@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   id: desperate_seller
   displayName: Desperate Seller
+  displayNameHe: מוכר נואש
   patienceRange:
     min: 0.15
     max: 0.45
@@ -36,3 +37,7 @@ MonoBehaviour:
   - Please, I need this money today.
   - Just give me something for it, anything reasonable.
   - It was my father's. I wouldn't sell it if I had a choice.
+  dialoguePoolHe:
+  - בבקשה, אני צריך את הכסף הזה היום.
+  - רק תן לי משהו בשבילו, כל דבר סביר.
+  - זה היה של אבא שלי. לא הייתי מוכר אם הייתה לי ברירה.

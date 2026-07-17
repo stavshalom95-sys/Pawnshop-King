@@ -16,6 +16,8 @@ MonoBehaviour:
   displayName: Studio Headphones
   description: Pro-grade cans with fresh ear pads. Knockoffs of this model flooded
     the market last year.
+  displayNameHe: אוזניות אולפן
+  descriptionHe: אוזניות ברמה מקצועית עם כריות חדשות. חיקויים של הדגם הזה הציפו את השוק בשנה שעברה.
   brandOrMaker: Kessler Audio
   era: modern
   category: 2

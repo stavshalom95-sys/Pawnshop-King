@@ -16,6 +16,8 @@ MonoBehaviour:
   displayName: Vintage Diver Watch
   description: A 1960s diver with a scratched crystal. The movement sounds right,
     but so do good fakes.
+  displayNameHe: שעון צלילה וינטג'
+  descriptionHe: שעון צלילה משנות ה-60 עם זכוכית שרוטה. המנגנון נשמע תקין, אבל כך גם זיופים טובים.
   brandOrMaker: Meridian
   era: 1968
   category: 0

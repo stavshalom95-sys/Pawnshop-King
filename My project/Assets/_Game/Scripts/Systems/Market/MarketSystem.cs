@@ -11,11 +11,32 @@ namespace PawnshopKing.Systems.Market
         public int price;
     }
 
+    public enum SellOutcome
+    {
+        Unavailable,
+        NotOwned,
+        Sold,
+    }
+
+    /// <summary>Non-price consequence of a sale — the UI composes localized text from this, never a baked English string.</summary>
+    public enum SellConsequence
+    {
+        None,
+        CollectorFakeAngry,
+        CollectorHotQuestions,
+        CollectorSatisfied,
+        BlackMarketHotMoved,
+        BlackMarketCleanNoted,
+        ShopfrontFakeReturned,
+        ShopfrontHotRecognized,
+    }
+
     public struct SellReceipt
     {
-        public bool sold;
+        public SellOutcome outcome;
         public int price;
-        public string message;
+        public SellConsequence consequence;
+        public bool Sold => outcome == SellOutcome.Sold;
     }
 
     /// <summary>
@@ -71,26 +92,23 @@ namespace PawnshopKing.Systems.Market
             var quote = GetQuote(state, item, channel);
             if (!quote.available)
             {
-                return new SellReceipt { sold = false, message = "No buyer wants this through that channel." };
+                return new SellReceipt { outcome = SellOutcome.Unavailable };
             }
 
             // Ownership gate: a stale UI row (item seized overnight, double-fired
             // click) must never pay out for goods that already left the shelves.
             if (!state.inventory.Remove(item))
             {
-                return new SellReceipt { sold = false, message = "That item is no longer on your shelves." };
+                return new SellReceipt { outcome = SellOutcome.NotOwned };
             }
 
             state.cash += quote.price;
+            var consequence = ApplyConsequences(state, item, channel);
 
-            var definition = ItemGenerator.GetDefinition(item.definitionId);
-            string name = definition != null ? definition.displayName : "Item";
-            string message = $"{name} sold for ${quote.price:N0}.{Consequences(state, item, channel)}";
-
-            return new SellReceipt { sold = true, price = quote.price, message = message };
+            return new SellReceipt { outcome = SellOutcome.Sold, price = quote.price, consequence = consequence };
         }
 
-        private static string Consequences(GameState state, ItemInstance item, SellChannel channel)
+        private static SellConsequence ApplyConsequences(GameState state, ItemInstance item, SellChannel channel)
         {
             bool fake = item.authenticity == Authenticity.Counterfeit;
             bool hot = item.stolenState != StolenState.Clean;
@@ -98,24 +116,24 @@ namespace PawnshopKing.Systems.Market
             switch (channel)
             {
                 case SellChannel.Collector:
-                    if (fake) { state.reputation -= 2; return " The collector is furious — it was a fake. (Reputation -2)"; }
-                    if (hot) { state.heat += 2; return " The collector asks pointed questions about provenance. (Heat +2)"; }
-                    return " A satisfied collector spreads the word.";
+                    if (fake) { state.reputation -= 2; return SellConsequence.CollectorFakeAngry; }
+                    if (hot) { state.heat += 2; return SellConsequence.CollectorHotQuestions; }
+                    return SellConsequence.CollectorSatisfied;
 
                 case SellChannel.BlackMarket:
                     if (hot)
                     {
                         // "May reduce heat if moved out quickly" (GDD 15.1).
                         state.heat = Mathf.Max(0, state.heat - 1);
-                        return " Moved quietly out of town, no questions asked. (Heat -1)";
+                        return SellConsequence.BlackMarketHotMoved;
                     }
                     state.heat += 1;
-                    return " The fence's circle takes note of your business. (Heat +1)";
+                    return SellConsequence.BlackMarketCleanNoted;
 
                 default: // Shopfront
-                    if (fake) { state.reputation -= 1; return " An angry buyer brought it back as counterfeit. (Reputation -1)"; }
-                    if (hot) { state.heat += 3; return " Someone recognized it in the window — police are asking around. (Heat +3)"; }
-                    return string.Empty;
+                    if (fake) { state.reputation -= 1; return SellConsequence.ShopfrontFakeReturned; }
+                    if (hot) { state.heat += 3; return SellConsequence.ShopfrontHotRecognized; }
+                    return SellConsequence.None;
             }
         }
 

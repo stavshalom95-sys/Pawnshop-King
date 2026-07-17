@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using PawnshopKing.Systems.Localization;
 using UnityEngine;
 
 namespace PawnshopKing.Data.Definitions
@@ -15,6 +16,20 @@ namespace PawnshopKing.Data.Definitions
         [Header("Identity")]
         public string id;
         public string displayName;
+
+        [Header("Hebrew localization (falls back to English when empty/short)")]
+        public string displayNameHe;
+        [TextArea] public List<string> dialoguePoolHe = new List<string>();
+        [TextArea] public List<string> originHintsHe = new List<string>();
+
+        public string LocalizedDisplayName =>
+            LanguageManager.IsRtl && !string.IsNullOrEmpty(displayNameHe) ? displayNameHe : displayName;
+
+        public List<string> LocalizedDialoguePool =>
+            LanguageManager.IsRtl && dialoguePoolHe.Count > 0 ? dialoguePoolHe : dialoguePool;
+
+        public List<string> LocalizedOriginHints =>
+            LanguageManager.IsRtl && originHintsHe.Count > 0 ? originHintsHe : originHints;
 
         [Header("Personality ranges (rolled per visit, GDD 14.1)")]
         public StatRange patienceRange = StatRange.Default;

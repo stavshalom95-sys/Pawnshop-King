@@ -16,6 +16,8 @@ MonoBehaviour:
   displayName: First-Print Comic Issue
   description: Bagged and boarded. Condition is everything, and light does terrible
     things to old paper.
+  displayNameHe: גיליון קומיקס הדפסה ראשונה
+  descriptionHe: ארוז ומוגן. המצב הוא הכול, ואור עושה דברים נוראיים לנייר ישן.
   brandOrMaker:
   era: 1975
   category: 4

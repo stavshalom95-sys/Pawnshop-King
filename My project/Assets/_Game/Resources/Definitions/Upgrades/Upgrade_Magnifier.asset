@@ -16,6 +16,8 @@ MonoBehaviour:
   displayName: Magnifier
   description: A proper jeweler's loupe. Wear, hairline cracks, and botched repairs
     stop hiding from you — condition reads almost never fail.
+  displayNameHe: זכוכית מגדלת
+  descriptionHe: לופה אמיתית של תכשיטנים. בלאי, סדקים דקים ותיקונים כושלים מפסיקים להסתתר ממך — בדיקות מצב כמעט אף פעם לא נכשלות.
   cost: 250
   effect: 0
   magnitude: 0.25

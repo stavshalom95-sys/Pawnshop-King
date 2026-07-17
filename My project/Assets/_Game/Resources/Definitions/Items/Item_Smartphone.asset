@@ -15,6 +15,8 @@ MonoBehaviour:
   id: electronics_smartphone
   displayName: Recent-Model Smartphone
   description: Nearly new, no box, no charger, price too good. Ask yourself why.
+  displayNameHe: סמארטפון דגם עדכני
+  descriptionHe: כמעט חדש, בלי קופסה, בלי מטען, מחיר טוב מדי. תשאל את עצמך למה.
   brandOrMaker: Nexa
   era: modern
   category: 2

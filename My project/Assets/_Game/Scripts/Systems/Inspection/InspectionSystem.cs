@@ -3,6 +3,7 @@ using PawnshopKing.Data;
 using PawnshopKing.Data.Definitions;
 using PawnshopKing.Data.Runtime;
 using PawnshopKing.Systems.DifficultyTier;
+using PawnshopKing.Systems.Localization;
 using PawnshopKing.Systems.Upgrades;
 using UnityEngine;
 
@@ -37,37 +38,72 @@ namespace PawnshopKing.Systems.Inspection
         private const float ValueBandLow = 0.8f;
         private const float ValueBandHigh = 1.25f;
 
-        // Clue pools straight from GDD 12.3.
-        private static readonly string[] FakeTells =
+        // Clue pools straight from GDD 12.3. Hebrew arrays are parallel (same
+        // index meaning), picked by CluePool() rather than merged into
+        // LanguageManager's flat key dictionary — each pool is only ever
+        // consumed here, and a "pick a random one" pool doesn't map cleanly
+        // onto single-key lookups the way format strings do.
+        private static readonly string[] FakeTellsEn =
         {
             "Logo engraving is slightly off-center.",
             "Gold weight seems low.",
             "Packaging is suspiciously perfect for its age.",
             "The finish looks far too fresh for the claimed age.",
         };
+        private static readonly string[] FakeTellsHe =
+        {
+            "החריטה של הלוגו קצת לא ממורכזת.",
+            "משקל הזהב נראה נמוך מדי.",
+            "האריזה מושלמת בצורה חשודה בשביל הגיל שלה.",
+            "הגימור נראה חדש מדי בשביל הגיל הנטען.",
+        };
 
-        private static readonly string[] StolenTells =
+        private static readonly string[] StolenTellsEn =
         {
             "Serial sticker looks recently replaced.",
             "Back panel screws were recently opened.",
             "The seller avoids eye contact when you ask about its origin.",
             "Engraved initials have been buffed out.",
         };
+        private static readonly string[] StolenTellsHe =
+        {
+            "מדבקת המספר הסידורי נראית מוחלפת לאחרונה.",
+            "ברגי הפלטה האחורית נפתחו לאחרונה.",
+            "המוכר נמנע ממגע עין כשאתה שואל על המקור.",
+            "אותיות חקוקות נשחקו במכוון.",
+        };
 
-        private static readonly string[] NothingTells =
+        private static readonly string[] NothingTellsEn =
         {
             "Nothing else jumps out at you.",
             "Honest wear, consistent with its age.",
             "It smells faintly of smoke and basement.",
         };
+        private static readonly string[] NothingTellsHe =
+        {
+            "שום דבר נוסף לא בולט לעין.",
+            "בלאי כן, תואם לגיל הפריט.",
+            "יש ריח קלוש של עשן ומרתף.",
+        };
 
         // A failed condition read: the pass is spent but the grade stays unknown.
-        private static readonly string[] ConditionMisses =
+        private static readonly string[] ConditionMissesEn =
         {
             "Hard to get a good read in this light — a magnifier would help.",
             "The wear could be surface-level, or could run deep. You can't tell.",
             "You squint at it, but can't call its condition either way.",
         };
+        private static readonly string[] ConditionMissesHe =
+        {
+            "קשה לקבל תמונה ברורה באור הזה — זכוכית מגדלת הייתה עוזרת.",
+            "הבלאי יכול להיות שטחי או עמוק. אי אפשר לדעת.",
+            "אתה מצמצם עיניים, אבל לא מצליח לקבוע את המצב.",
+        };
+
+        private static string[] FakeTells => LanguageManager.IsRtl ? FakeTellsHe : FakeTellsEn;
+        private static string[] StolenTells => LanguageManager.IsRtl ? StolenTellsHe : StolenTellsEn;
+        private static string[] NothingTells => LanguageManager.IsRtl ? NothingTellsHe : NothingTellsEn;
+        private static string[] ConditionMisses => LanguageManager.IsRtl ? ConditionMissesHe : ConditionMissesEn;
 
         public static bool CanInspect(ItemInstance item) => item.timesInspected < MaxInspectionsPerItem;
 
@@ -148,14 +184,15 @@ namespace PawnshopKing.Systems.Inspection
 
         private static string ConditionClue(ConditionState condition)
         {
+            bool he = LanguageManager.IsRtl;
             switch (condition)
             {
-                case ConditionState.Pristine: return "Untouched — barely a mark on it.";
-                case ConditionState.Clean: return "Good shape overall.";
-                case ConditionState.Worn: return "Real wear on the edges and corners.";
-                case ConditionState.Damaged: return "Visible damage — it would need work.";
-                case ConditionState.Broken: return "It doesn't work at all.";
-                default: return "Condition noted.";
+                case ConditionState.Pristine: return he ? "לא נגוע — כמעט בלי סימן." : "Untouched — barely a mark on it.";
+                case ConditionState.Clean: return he ? "מצב טוב באופן כללי." : "Good shape overall.";
+                case ConditionState.Worn: return he ? "בלאי אמיתי בקצוות ובפינות." : "Real wear on the edges and corners.";
+                case ConditionState.Damaged: return he ? "נזק גלוי לעין — יידרש טיפול." : "Visible damage — it would need work.";
+                case ConditionState.Broken: return he ? "זה לא עובד בכלל." : "It doesn't work at all.";
+                default: return he ? "מצב תועד." : "Condition noted.";
             }
         }
 
@@ -166,7 +203,7 @@ namespace PawnshopKing.Systems.Inspection
         /// </summary>
         private static void TryAddOriginHint(ItemInstance item, CustomerArchetypeDefinition archetype, List<string> revealed)
         {
-            if (archetype == null || archetype.originHints.Count == 0) return;
+            if (archetype == null || archetype.LocalizedOriginHints.Count == 0) return;
             if (Random.value >= OriginHintChance) return;
 
             bool stolenMatch = item.stolenState != StolenState.Clean
@@ -175,7 +212,7 @@ namespace PawnshopKing.Systems.Inspection
                 && archetype.riskProfile.fakeChanceBonus >= RiskyArchetypeThreshold;
             if (!stolenMatch && !fakeMatch) return;
 
-            string hint = PickNew(archetype.originHints, item);
+            string hint = PickNew(archetype.LocalizedOriginHints, item);
             if (hint != null) AddClue(item, revealed, hint);
         }
 

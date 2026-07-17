@@ -5,11 +5,18 @@ using UnityEngine;
 
 namespace PawnshopKing.Systems.Upgrades
 {
-    /// <summary>One purchase attempt's outcome, with player-facing feedback text.</summary>
+    public enum PurchaseOutcome
+    {
+        AlreadyOwned,
+        InsufficientFunds,
+        Success,
+    }
+
+    /// <summary>One purchase attempt's outcome — the UI composes localized feedback text from this.</summary>
     public struct PurchaseResult
     {
-        public bool success;
-        public string message;
+        public PurchaseOutcome outcome;
+        public bool Success => outcome == PurchaseOutcome.Success;
     }
 
     /// <summary>
@@ -66,21 +73,17 @@ namespace PawnshopKing.Systems.Upgrades
         {
             if (IsOwned(state, definition.id))
             {
-                return new PurchaseResult { success = false, message = $"You already own the {definition.displayName}." };
+                return new PurchaseResult { outcome = PurchaseOutcome.AlreadyOwned };
             }
 
             if (state.cash < definition.cost)
             {
-                return new PurchaseResult
-                {
-                    success = false,
-                    message = $"You can't afford the {definition.displayName} — it's ${definition.cost:N0} and you have ${state.cash:N0}."
-                };
+                return new PurchaseResult { outcome = PurchaseOutcome.InsufficientFunds };
             }
 
             state.cash -= definition.cost;
             state.shop.installedToolIds.Add(definition.id);
-            return new PurchaseResult { success = true, message = $"{definition.displayName} installed. ${definition.cost:N0} well spent — probably." };
+            return new PurchaseResult { outcome = PurchaseOutcome.Success };
         }
 
         private static void EnsureLoaded()

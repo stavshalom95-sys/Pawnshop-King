@@ -16,6 +16,8 @@ MonoBehaviour:
   displayName: UV Light
   description: Modern glue, retouched engravings, and fresh paint fluoresce under
     it. Counterfeits give themselves away far more often.
+  displayNameHe: מנורת UV
+  descriptionHe: דבק מודרני, חריטות משוחזרות וצבע טרי זוהרים תחתיה. זיופים חושפים את עצמם הרבה יותר לעיתים קרובות.
   cost: 400
   effect: 1
   magnitude: 0.25

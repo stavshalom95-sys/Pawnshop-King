@@ -65,7 +65,6 @@ namespace PawnshopKing.UI
 
         // Armed Offer state: Offer pressed with nothing to submit pulses the button
         // and hands focus to the input instead of dead-clicking (GDD 32.2 feedback).
-        private const string OfferArmHint = "Type your offer — press Enter or hit Offer again.";
         private Image offerButtonImage;
         private Coroutine offerPulse;
         private bool offerArmed;
@@ -146,6 +145,7 @@ namespace PawnshopKing.UI
             foreach (var row in itemRows) RefreshItemRow(row);
             UpdateTip();
             if (currentCustomer != null) UpdateMoodAskingLine();
+            if (gm.State != null) RenderTopBar(gm.State);
         }
 
         private void Update()
@@ -180,13 +180,25 @@ namespace PawnshopKing.UI
             lastPayment = s.debt.nextPaymentAmount;
             lastDebtDays = s.debt.daysUntilPayment;
 
-            dayText.text = $"Day {s.currentDay}";
             UpdateCashLabel(s.cash);
-            reputationText.text = $"Rep  {s.reputation}";
-            heatText.text = $"Heat  {s.heat}";
-            debtText.text = s.debt.totalDebt > 0
-                ? $"Debt  ${s.debt.totalDebt:N0}  (${s.debt.nextPaymentAmount:N0} due in {s.debt.daysUntilPayment}d)"
-                : "Debt  cleared";
+            RenderTopBar(s);
+        }
+
+        /// <summary>
+        /// Day/Rep/Heat/Debt text. Split out from Update's cache-gated block so a
+        /// language switch (not a value change) can still force a re-render —
+        /// OnLanguageChanged calls this directly, bypassing the frame cache, since
+        /// the cache only tracks whether the NUMBERS changed, not the language.
+        /// </summary>
+        private void RenderTopBar(GameState s)
+        {
+            Loc.Set(dayText, Loc.F(LanguageManager.Keys.DayBarLabel, s.currentDay), UITheme.HeaderFont);
+            Loc.Set(reputationText, Loc.F(LanguageManager.Keys.ReputationBarLabel, s.reputation));
+            Loc.Set(heatText, Loc.F(LanguageManager.Keys.HeatBarLabel, s.heat));
+            Loc.Set(debtText, s.debt.totalDebt > 0
+                ? Loc.F(LanguageManager.Keys.DebtBarLabel, s.debt.totalDebt.ToString("N0"),
+                    s.debt.nextPaymentAmount.ToString("N0"), s.debt.daysUntilPayment)
+                : Loc.T(LanguageManager.Keys.DebtBarCleared));
         }
 
         // ---- Cash tick (juice) ----------------------------------------------
@@ -289,13 +301,13 @@ namespace PawnshopKing.UI
             }
 
             customerDialogueText.maxVisibleCharacters = int.MaxValue;
-            customerDialogueText.text = text;
+            Loc.Set(customerDialogueText, text);
         }
 
         private void StartDialogueTypewriter(string line)
         {
             if (dialogueRoutine != null) StopCoroutine(dialogueRoutine);
-            customerDialogueText.text = line;
+            Loc.Set(customerDialogueText, line);
             customerDialogueText.maxVisibleCharacters = 0;
             dialogueRoutine = StartCoroutine(DialogueRoutine());
         }
@@ -349,7 +361,7 @@ namespace PawnshopKing.UI
             currentCustomer = customer;
             currentArchetype = gm.Day.GetArchetype(customer.archetypeId);
 
-            customerNameText.text = currentArchetype != null ? currentArchetype.displayName : customer.archetypeId;
+            Loc.Set(customerNameText, currentArchetype != null ? currentArchetype.LocalizedDisplayName : customer.archetypeId, UITheme.HeaderFont);
             StartDialogueTypewriter($"“{PickDialogueLine(currentArchetype)}”");
             UpdateMoodAskingLine();
             RebuildItemRows(customer);
@@ -358,7 +370,7 @@ namespace PawnshopKing.UI
             offerInput.text = string.Empty;
             bool tradable = customer.items.Count > 0;
             dealControls.SetActive(tradable);
-            dealFeedbackText.text = tradable ? string.Empty : "They have nothing you'd trade for.";
+            Loc.Set(dealFeedbackText, tradable ? string.Empty : Loc.T(LanguageManager.Keys.DealNothingToTrade));
             RefreshBuyLabel();
 
             queueText.text = gm.Day.CustomersRemaining == 0
@@ -394,7 +406,7 @@ namespace PawnshopKing.UI
             if (selection.Count == 0)
             {
                 DisarmOffer();
-                dealFeedbackText.text = "Check at least one item to deal on.";
+                Loc.Set(dealFeedbackText, Loc.T(LanguageManager.Keys.DealCheckAtLeastOne));
                 return;
             }
 
@@ -408,7 +420,7 @@ namespace PawnshopKing.UI
 
             if (amount > gm.State.cash)
             {
-                dealFeedbackText.text = "You can't cover that offer.";
+                Loc.Set(dealFeedbackText, Loc.T(LanguageManager.Keys.DealNoCashForOffer));
                 return;
             }
 
@@ -418,29 +430,29 @@ namespace PawnshopKing.UI
                 case OfferOutcome.Accepted:
                     Systems.Audio.AudioManager.Instance?.PlayAccept();
                     UIFx.SpawnMoneyFloater(this, customerPanelRect, -result.price, new Vector2(0f, -190f));
-                    dealFeedbackText.text = $"Deal. You hand over ${result.price:N0}.{LeftoverSuffix()}";
+                    Loc.Set(dealFeedbackText, Loc.F(LanguageManager.Keys.DealAccepted, result.price.ToString("N0"), LeftoverSuffix()));
                     ConcludeVisit();
                     break;
                 case OfferOutcome.AcceptedReluctantly:
                     Systems.Audio.AudioManager.Instance?.PlayAccept();
                     UIFx.SpawnMoneyFloater(this, customerPanelRect, -result.price, new Vector2(0f, -190f));
-                    dealFeedbackText.text = $"“Fine. Just give me the money.” You pay ${result.price:N0}.{LeftoverSuffix()}";
+                    Loc.Set(dealFeedbackText, Loc.F(LanguageManager.Keys.DealAcceptedReluctantly, result.price.ToString("N0"), LeftoverSuffix()));
                     ConcludeVisit();
                     break;
                 case OfferOutcome.Countered:
-                    dealFeedbackText.text = $"“Make it ${result.price:N0} and we're done.”";
+                    Loc.Set(dealFeedbackText, Loc.F(LanguageManager.Keys.DealCountered, result.price.ToString("N0")));
                     UpdateMoodAskingLine();
                     RefreshBuyLabel();
                     UpdateTip();
                     break;
                 case OfferOutcome.OffendedLeft:
                     Systems.Audio.AudioManager.Instance?.PlayReject();
-                    dealFeedbackText.text = "“Insulting.” They storm out. Word gets around. (Reputation -1)";
+                    Loc.Set(dealFeedbackText, Loc.T(LanguageManager.Keys.DealOffended));
                     ConcludeVisit();
                     break;
                 case OfferOutcome.GaveUpLeft:
                     Systems.Audio.AudioManager.Instance?.PlayReject();
-                    dealFeedbackText.text = "“Forget it.” They pack up and leave.";
+                    Loc.Set(dealFeedbackText, Loc.T(LanguageManager.Keys.DealGaveUp));
                     ConcludeVisit();
                     break;
             }
@@ -453,20 +465,20 @@ namespace PawnshopKing.UI
             var selection = SelectedItems();
             if (selection.Count == 0)
             {
-                dealFeedbackText.text = "Check at least one item to deal on.";
+                Loc.Set(dealFeedbackText, Loc.T(LanguageManager.Keys.DealCheckAtLeastOne));
                 return;
             }
 
             if (currentCustomer.askingPrice > gm.State.cash)
             {
-                dealFeedbackText.text = "You don't have the cash for their price.";
+                Loc.Set(dealFeedbackText, Loc.T(LanguageManager.Keys.DealNoCashForAsking));
                 return;
             }
 
             var result = NegotiationSystem.BuyAtAskingPrice(gm.State, currentCustomer, currentArchetype, selection);
             Systems.Audio.AudioManager.Instance?.PlayAccept();
             UIFx.SpawnMoneyFloater(this, customerPanelRect, -result.price, new Vector2(0f, -190f));
-            dealFeedbackText.text = $"Bought at asking price — ${result.price:N0}. Fair dealing. (Reputation +1){LeftoverSuffix()}";
+            Loc.Set(dealFeedbackText, Loc.F(LanguageManager.Keys.DealBoughtAtAsking, result.price.ToString("N0"), LeftoverSuffix()));
             ConcludeVisit();
         }
 
@@ -477,7 +489,7 @@ namespace PawnshopKing.UI
             DisarmOffer();
             Systems.Audio.AudioManager.Instance?.PlayReject();
             NegotiationSystem.Reject(currentCustomer);
-            dealFeedbackText.text = "You wave them off. They take their goods elsewhere.";
+            Loc.Set(dealFeedbackText, Loc.T(LanguageManager.Keys.DealRejected));
             ConcludeVisit();
         }
 
@@ -506,7 +518,7 @@ namespace PawnshopKing.UI
         }
 
         private string LeftoverSuffix() =>
-            currentCustomer.items.Count > 0 ? " They pocket what you passed on." : string.Empty;
+            currentCustomer.items.Count > 0 ? Loc.T(LanguageManager.Keys.DealLeftoverSuffix) : string.Empty;
 
         // ---- Armed Offer state ----------------------------------------------
 
@@ -516,7 +528,7 @@ namespace PawnshopKing.UI
         /// </summary>
         private void ArmOffer()
         {
-            dealFeedbackText.text = OfferArmHint;
+            Loc.Set(dealFeedbackText, Loc.T(LanguageManager.Keys.OfferArmHint));
             offerArmedFrame = Time.frameCount;
             offerInput.Select();
             offerInput.ActivateInputField();
@@ -534,9 +546,13 @@ namespace PawnshopKing.UI
                 offerPulse = null;
             }
 
+            // Track via the flag, not a text comparison — .text holds the RTL-
+            // prepared (possibly reversed) string in Hebrew, which would never
+            // equal the logical hint string this used to compare against.
+            bool wasArmed = offerArmed;
             offerArmed = false;
             if (offerButtonImage != null) offerButtonImage.color = ButtonColor;
-            if (dealFeedbackText.text == OfferArmHint) dealFeedbackText.text = string.Empty;
+            if (wasArmed) dealFeedbackText.text = string.Empty;
         }
 
         /// <summary>Slow gold pulse — same family as the cash figures, unmistakably not the neutral cyan.</summary>
@@ -647,7 +663,7 @@ namespace PawnshopKing.UI
             DisarmOffer();
             ClearItemRows();
             dealControls.SetActive(false);
-            customerMoodText.text = $"Mood: {currentCustomer.mood}";
+            Loc.Set(customerMoodText, Loc.F(LanguageManager.Keys.MoodOnlyLine, LanguageManager.MoodLabel(currentCustomer.mood)));
             RefreshActionButton();
             UpdateTip();
         }
@@ -655,7 +671,7 @@ namespace PawnshopKing.UI
         private void UpdateMoodAskingLine()
         {
             string asking = currentCustomer.askingPrice > 0 ? $"${currentCustomer.askingPrice:N0}" : "—";
-            string baseLine = Loc.F(LanguageManager.Keys.MoodAskingLine, currentCustomer.mood, asking);
+            string baseLine = Loc.F(LanguageManager.Keys.MoodAskingLine, LanguageManager.MoodLabel(currentCustomer.mood), asking);
             string typeTag = $"   <color=#{TypeColorHex(currentCustomer.customerType)}>[{Loc.T(TypeKey(currentCustomer.customerType))}]</color>";
             Loc.Set(customerMoodText, baseLine + typeTag);
         }
@@ -826,11 +842,11 @@ namespace PawnshopKing.UI
         {
             var item = row.item;
             var definition = ItemGenerator.GetDefinition(item.definitionId);
-            string name = definition != null ? definition.displayName : item.definitionId;
-            string category = definition != null ? definition.category.ToString() : "?";
+            string name = definition != null ? definition.LocalizedDisplayName : item.definitionId;
+            string category = definition != null ? LanguageManager.CategoryLabel(definition.category) : "?";
 
             string condition = item.playerKnowledge.HasFlag(KnowledgeFlags.ConditionAssessed)
-                ? item.condition.ToString()
+                ? LanguageManager.ConditionLabel(item.condition)
                 : "?";
 
             string value = "?";
@@ -842,13 +858,19 @@ namespace PawnshopKing.UI
 
             var sb = new StringBuilder();
             sb.Append($"{name}   <color=#9E9A90>{category}</color>");
-            sb.Append($"\n<size=85%>Condition: {condition} · Value: {value}</size>");
+            sb.Append($"\n<size=85%>{Loc.F(LanguageManager.Keys.ItemStatsLineCounter, condition, value)}</size>");
+
+            if (definition != null && !string.IsNullOrEmpty(definition.LocalizedDescription))
+            {
+                sb.Append($"\n<size=85%><i><color=#8A94A8>{definition.LocalizedDescription}</color></i></size>");
+            }
+
             foreach (var clue in item.knownClues)
             {
                 sb.Append($"\n<size=85%><color=#C9B458>»</color> <color=#B8B4AA>{clue}</color></size>");
             }
 
-            row.infoText.text = sb.ToString();
+            Loc.Set(row.infoText, sb.ToString());
 
             bool canInspect = InspectionSystem.CanInspect(item);
             row.inspectButton.interactable = canInspect;
@@ -897,8 +919,9 @@ namespace PawnshopKing.UI
 
         private static string PickDialogueLine(CustomerArchetypeDefinition archetype)
         {
-            if (archetype == null || archetype.dialoguePool.Count == 0) return "...";
-            return archetype.dialoguePool[Random.Range(0, archetype.dialoguePool.Count)];
+            var pool = archetype?.LocalizedDialoguePool;
+            if (pool == null || pool.Count == 0) return "...";
+            return pool[Random.Range(0, pool.Count)];
         }
 
         // ---- Construction --------------------------------------------------
@@ -974,8 +997,10 @@ namespace PawnshopKing.UI
             cashText = CreateText(bar, "CashText", 24f, TextAlignmentOptions.Left);
             cashText.color = UITheme.Gold;
             reputationText = CreateText(bar, "ReputationText", 24f, TextAlignmentOptions.Left);
+            UITooltipTrigger.Attach(reputationText.gameObject, LanguageManager.Keys.ReputationTooltip);
             heatText = CreateText(bar, "HeatText", 24f, TextAlignmentOptions.Left);
             heatText.color = UITheme.Danger;
+            UITooltipTrigger.Attach(heatText.gameObject, LanguageManager.Keys.HeatTooltip);
             debtText = CreateText(bar, "DebtText", 24f, TextAlignmentOptions.Right);
         }
 

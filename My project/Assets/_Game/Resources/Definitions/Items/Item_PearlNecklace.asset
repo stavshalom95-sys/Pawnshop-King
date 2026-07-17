@@ -15,6 +15,8 @@ MonoBehaviour:
   id: jewelry_pearl_necklace
   displayName: Pearl Necklace
   description: Estate-sale pearls with a silver clasp. Cultured, natural, or glass?
+  displayNameHe: שרשרת פנינים
+  descriptionHe: פנינים ממכירת עיזבון עם אבזם כסף. מתורבתות, טבעיות, או זכוכית?
   brandOrMaker:
   era: 1950s
   category: 1

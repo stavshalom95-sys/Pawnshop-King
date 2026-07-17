@@ -16,6 +16,8 @@ MonoBehaviour:
   displayName: Gold Ring
   description: A plain band, stamped 18k. Rings are the easiest thing in the world
     to fake a stamp on.
+  displayNameHe: טבעת זהב
+  descriptionHe: טבעת פשוטה, עם חותמת 18 קראט. טבעות הן הדבר הכי קל בעולם לזייף עליו חותמת.
   brandOrMaker:
   era:
   category: 1

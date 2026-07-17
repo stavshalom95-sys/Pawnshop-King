@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using PawnshopKing.Systems.Localization;
 using UnityEngine;
 
 namespace PawnshopKing.Data.Definitions
@@ -18,6 +19,20 @@ namespace PawnshopKing.Data.Definitions
         public string brandOrMaker;
         public string era;
         public ItemCategory category;
+
+        [Header("Hebrew localization (falls back to English above when empty)")]
+        public string displayNameHe;
+        [TextArea] public string descriptionHe;
+
+        // displayName (English, unlocalized) stays the key for Resources/ItemIcons
+        // photo lookups — file names are authored in English regardless of UI
+        // language, so UI code showing player-facing text should read these
+        // Localized* properties instead, never the raw fields above.
+        public string LocalizedDisplayName =>
+            LanguageManager.IsRtl && !string.IsNullOrEmpty(displayNameHe) ? displayNameHe : displayName;
+
+        public string LocalizedDescription =>
+            LanguageManager.IsRtl && !string.IsNullOrEmpty(descriptionHe) ? descriptionHe : description;
 
         [Header("Economics")]
         [Min(0)] public int baseValueMin;

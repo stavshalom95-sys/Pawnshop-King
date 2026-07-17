@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using PawnshopKing.Data;
 using UnityEngine;
 
 namespace PawnshopKing.Systems.Localization
@@ -53,6 +54,49 @@ namespace PawnshopKing.Systems.Localization
             if (table.TryGetValue(key, out var value)) return value;
             if (English.TryGetValue(key, out value)) return value;
             return key;
+        }
+
+        // ---- Enum value labels — every raw .ToString() a player can see (item
+        // rows, mood line) gets a translation, not just the surrounding chrome. ----
+
+        public static string CategoryLabel(ItemCategory category)
+        {
+            switch (category)
+            {
+                case ItemCategory.Watches: return T(Keys.CategoryWatches);
+                case ItemCategory.Jewelry: return T(Keys.CategoryJewelry);
+                case ItemCategory.Electronics: return T(Keys.CategoryElectronics);
+                case ItemCategory.MusicalInstruments: return T(Keys.CategoryMusicalInstruments);
+                case ItemCategory.RetroCollectibles: return T(Keys.CategoryRetroCollectibles);
+                case ItemCategory.AntiquesCurios: return T(Keys.CategoryAntiquesCurios);
+                case ItemCategory.LuxuryAccessories: return T(Keys.CategoryLuxuryAccessories);
+                default: return T(Keys.CategoryToolsPracticalGoods);
+            }
+        }
+
+        public static string ConditionLabel(ConditionState condition)
+        {
+            switch (condition)
+            {
+                case ConditionState.Pristine: return T(Keys.ConditionPristine);
+                case ConditionState.Clean: return T(Keys.ConditionClean);
+                case ConditionState.Worn: return T(Keys.ConditionWorn);
+                case ConditionState.Damaged: return T(Keys.ConditionDamaged);
+                default: return T(Keys.ConditionBroken);
+            }
+        }
+
+        public static string MoodLabel(CustomerMood mood)
+        {
+            switch (mood)
+            {
+                case CustomerMood.Friendly: return T(Keys.MoodFriendly);
+                case CustomerMood.Nervous: return T(Keys.MoodNervous);
+                case CustomerMood.Impatient: return T(Keys.MoodImpatient);
+                case CustomerMood.Desperate: return T(Keys.MoodDesperate);
+                case CustomerMood.Offended: return T(Keys.MoodOffended);
+                default: return T(Keys.MoodNeutral);
+            }
         }
 
         /// <summary>UI string keys — the single vocabulary both tables must cover.</summary>
@@ -139,7 +183,78 @@ namespace PawnshopKing.Systems.Localization
             public const string OfferPlaceholder = "offer_placeholder";
             public const string DebtPayPlaceholder = "debt_pay_placeholder";
 
+            public const string DayBarLabel = "day_bar_label";               // {0} = day number
+            public const string ReputationBarLabel = "reputation_bar_label"; // {0} = value
+            public const string HeatBarLabel = "heat_bar_label";             // {0} = value
+            public const string DebtBarLabel = "debt_bar_label";             // {0} = owed, {1} = due, {2} = days
+            public const string DebtBarCleared = "debt_bar_cleared";
+            public const string ReputationTooltip = "reputation_tooltip";
+            public const string HeatTooltip = "heat_tooltip";
+
+            // Deal feedback (negotiation outcomes)
+            public const string DealAccepted = "deal_accepted";                         // {0}=price {1}=leftover suffix
+            public const string DealAcceptedReluctantly = "deal_accepted_reluctantly";   // {0}=price {1}=leftover suffix
+            public const string DealCountered = "deal_countered";                        // {0}=price
+            public const string DealOffended = "deal_offended";
+            public const string DealGaveUp = "deal_gave_up";
+            public const string DealCheckAtLeastOne = "deal_check_at_least_one";
+            public const string DealNoCashForOffer = "deal_no_cash_for_offer";
+            public const string DealNoCashForAsking = "deal_no_cash_for_asking";
+            public const string DealBoughtAtAsking = "deal_bought_at_asking";            // {0}=price {1}=leftover suffix
+            public const string DealRejected = "deal_rejected";
+            public const string DealLeftoverSuffix = "deal_leftover_suffix";
+            public const string OfferArmHint = "offer_arm_hint";
+
+            // Market (selling in Inventory)
+            public const string SellUnavailable = "sell_unavailable";
+            public const string SellNotOwned = "sell_not_owned";
+            public const string SoldFor = "sold_for";                                   // {0}=item name {1}=price
+            public const string ConsequenceCollectorFakeAngry = "consequence_collector_fake_angry";
+            public const string ConsequenceCollectorHotQuestions = "consequence_collector_hot_questions";
+            public const string ConsequenceCollectorSatisfied = "consequence_collector_satisfied";
+            public const string ConsequenceBlackMarketHotMoved = "consequence_bm_hot_moved";
+            public const string ConsequenceBlackMarketCleanNoted = "consequence_bm_clean_noted";
+            public const string ConsequenceShopfrontFakeReturned = "consequence_shop_fake_returned";
+            public const string ConsequenceShopfrontHotRecognized = "consequence_shop_hot_recognized";
+
+            // Upgrades (purchase outcomes)
+            public const string UpgradeAlreadyOwned = "upgrade_already_owned";           // {0}=name
+            public const string UpgradeCantAfford = "upgrade_cant_afford";               // {0}=name {1}=cost {2}=cash
+            public const string UpgradeInstalled = "upgrade_installed";                  // {0}=name {1}=cost
+
+            public const string ItemStatsLineCounter = "item_stats_line_counter";        // {0}=condition {1}=value
+            public const string ItemStatsLineInventory = "item_stats_line_inventory";    // {0}=condition {1}=value {2}=paid
+
+            public const string CategoryWatches = "category_watches";
+            public const string CategoryJewelry = "category_jewelry";
+            public const string CategoryElectronics = "category_electronics";
+            public const string CategoryMusicalInstruments = "category_musical_instruments";
+            public const string CategoryRetroCollectibles = "category_retro_collectibles";
+            public const string CategoryAntiquesCurios = "category_antiques_curios";
+            public const string CategoryLuxuryAccessories = "category_luxury_accessories";
+            public const string CategoryToolsPracticalGoods = "category_tools_practical_goods";
+
+            public const string ConditionPristine = "condition_pristine";
+            public const string ConditionClean = "condition_clean";
+            public const string ConditionWorn = "condition_worn";
+            public const string ConditionDamaged = "condition_damaged";
+            public const string ConditionBroken = "condition_broken";
+
+            public const string MoodNeutral = "mood_neutral";
+            public const string MoodFriendly = "mood_friendly";
+            public const string MoodNervous = "mood_nervous";
+            public const string MoodImpatient = "mood_impatient";
+            public const string MoodDesperate = "mood_desperate";
+            public const string MoodOffended = "mood_offended";
+
+            public const string EffectConditionAccuracy = "effect_condition_accuracy";
+            public const string EffectFakeDetection = "effect_fake_detection";
+            public const string EffectValueAccuracy = "effect_value_accuracy";
+            public const string EffectTool = "effect_tool";
+
             public const string MoodAskingLine = "mood_asking_line"; // {0} = mood, {1} = asking price
+            public const string MoodOnlyLine = "mood_only_line";     // {0} = mood
+            public const string DealNothingToTrade = "deal_nothing_to_trade";
             public const string CustomerTypeHaggler = "customer_type_haggler";
             public const string CustomerTypeDesperate = "customer_type_desperate";
             public const string CustomerTypeHurryUp = "customer_type_hurryup";
@@ -234,7 +349,75 @@ namespace PawnshopKing.Systems.Localization
             [Keys.OfferPlaceholder] = "offer $",
             [Keys.DebtPayPlaceholder] = "amount $",
 
+            [Keys.DayBarLabel] = "Day {0}",
+            [Keys.ReputationBarLabel] = "Rep  {0}",
+            [Keys.HeatBarLabel] = "Heat  {0}",
+            [Keys.DebtBarLabel] = "Debt  ${0}  (${1} due in {2}d)",
+            [Keys.DebtBarCleared] = "Debt  cleared",
+            [Keys.ReputationTooltip] = "High reputation attracts wealthier customers.",
+            [Keys.HeatTooltip] = "As heat rises, the risk of a police raid increases.",
+
+            [Keys.DealAccepted] = "Deal. You hand over ${0}.{1}",
+            [Keys.DealAcceptedReluctantly] = "“Fine. Just give me the money.” You pay ${0}.{1}",
+            [Keys.DealCountered] = "“Make it ${0} and we're done.”",
+            [Keys.DealOffended] = "“Insulting.” They storm out. Word gets around. (Reputation -1)",
+            [Keys.DealGaveUp] = "“Forget it.” They pack up and leave.",
+            [Keys.DealCheckAtLeastOne] = "Check at least one item to deal on.",
+            [Keys.DealNoCashForOffer] = "You can't cover that offer.",
+            [Keys.DealNoCashForAsking] = "You don't have the cash for their price.",
+            [Keys.DealBoughtAtAsking] = "Bought at asking price — ${0}. Fair dealing. (Reputation +1){1}",
+            [Keys.DealRejected] = "You wave them off. They take their goods elsewhere.",
+            [Keys.DealLeftoverSuffix] = " They pocket what you passed on.",
+            [Keys.OfferArmHint] = "Type your offer — press Enter or hit Offer again.",
+
+            [Keys.SellUnavailable] = "No buyer wants this through that channel.",
+            [Keys.SellNotOwned] = "That item is no longer on your shelves.",
+            [Keys.SoldFor] = "{0} sold for ${1}.",
+            [Keys.ConsequenceCollectorFakeAngry] = " The collector is furious — it was a fake. (Reputation -2)",
+            [Keys.ConsequenceCollectorHotQuestions] = " The collector asks pointed questions about provenance. (Heat +2)",
+            [Keys.ConsequenceCollectorSatisfied] = " A satisfied collector spreads the word.",
+            [Keys.ConsequenceBlackMarketHotMoved] = " Moved quietly out of town, no questions asked. (Heat -1)",
+            [Keys.ConsequenceBlackMarketCleanNoted] = " The fence's circle takes note of your business. (Heat +1)",
+            [Keys.ConsequenceShopfrontFakeReturned] = " An angry buyer brought it back as counterfeit. (Reputation -1)",
+            [Keys.ConsequenceShopfrontHotRecognized] = " Someone recognized it in the window — police are asking around. (Heat +3)",
+
+            [Keys.UpgradeAlreadyOwned] = "You already own the {0}.",
+            [Keys.UpgradeCantAfford] = "You can't afford the {0} — it's ${1} and you have ${2}.",
+            [Keys.UpgradeInstalled] = "{0} installed. ${1} well spent — probably.",
+
+            [Keys.ItemStatsLineCounter] = "Condition: {0} · Value: {1}",
+            [Keys.ItemStatsLineInventory] = "Condition: {0} · Value: {1} · Paid ${2}",
+
+            [Keys.CategoryWatches] = "Watches",
+            [Keys.CategoryJewelry] = "Jewelry",
+            [Keys.CategoryElectronics] = "Electronics",
+            [Keys.CategoryMusicalInstruments] = "Musical Instruments",
+            [Keys.CategoryRetroCollectibles] = "Retro Collectibles",
+            [Keys.CategoryAntiquesCurios] = "Antiques & Curios",
+            [Keys.CategoryLuxuryAccessories] = "Luxury Accessories",
+            [Keys.CategoryToolsPracticalGoods] = "Tools & Practical Goods",
+
+            [Keys.ConditionPristine] = "Pristine",
+            [Keys.ConditionClean] = "Clean",
+            [Keys.ConditionWorn] = "Worn",
+            [Keys.ConditionDamaged] = "Damaged",
+            [Keys.ConditionBroken] = "Broken",
+
+            [Keys.MoodNeutral] = "Neutral",
+            [Keys.MoodFriendly] = "Friendly",
+            [Keys.MoodNervous] = "Nervous",
+            [Keys.MoodImpatient] = "Impatient",
+            [Keys.MoodDesperate] = "Desperate",
+            [Keys.MoodOffended] = "Offended",
+
+            [Keys.EffectConditionAccuracy] = "Inspection · Condition",
+            [Keys.EffectFakeDetection] = "Inspection · Counterfeits",
+            [Keys.EffectValueAccuracy] = "Inspection · Valuation",
+            [Keys.EffectTool] = "Tool",
+
             [Keys.MoodAskingLine] = "Mood: {0}     Asking: {1}",
+            [Keys.MoodOnlyLine] = "Mood: {0}",
+            [Keys.DealNothingToTrade] = "They have nothing you'd trade for.",
             [Keys.CustomerTypeHaggler] = "Haggler",
             [Keys.CustomerTypeDesperate] = "Desperate",
             [Keys.CustomerTypeHurryUp] = "In a Hurry",
@@ -329,7 +512,75 @@ namespace PawnshopKing.Systems.Localization
             [Keys.OfferPlaceholder] = "הצעה $",
             [Keys.DebtPayPlaceholder] = "סכום $",
 
+            [Keys.DayBarLabel] = "יום {0}",
+            [Keys.ReputationBarLabel] = "מוניטין  {0}",
+            [Keys.HeatBarLabel] = "חום  {0}",
+            [Keys.DebtBarLabel] = "חוב  ${0}  (${1} בעוד {2} ימים)",
+            [Keys.DebtBarCleared] = "חוב  נפרע",
+            [Keys.ReputationTooltip] = "מוניטין גבוה מושך לקוחות עשירים יותר",
+            [Keys.HeatTooltip] = "ככל שהחום עולה, הסיכון לפשיטה משטרתית גובר",
+
+            [Keys.DealAccepted] = "עסקה סגורה. אתה מעביר ${0}.{1}",
+            [Keys.DealAcceptedReluctantly] = "“בסדר, רק תן לי את הכסף.” אתה משלם ${0}.{1}",
+            [Keys.DealCountered] = "“שיהיה ${0} וסגרנו.”",
+            [Keys.DealOffended] = "“עלבון.” הוא יוצא בכעס. השם שלך ייפגע. (מוניטין -1)",
+            [Keys.DealGaveUp] = "“עזוב, לא משנה.” הוא אוסף את החפצים והולך.",
+            [Keys.DealCheckAtLeastOne] = "סמן לפחות פריט אחד כדי לבצע עסקה.",
+            [Keys.DealNoCashForOffer] = "אין לך מספיק מזומן לכסות את ההצעה.",
+            [Keys.DealNoCashForAsking] = "אין לך מספיק מזומן במחיר המבוקש.",
+            [Keys.DealBoughtAtAsking] = "נקנה במחיר המבוקש — ${0}. עסקה הוגנת. (מוניטין +1){1}",
+            [Keys.DealRejected] = "אתה מסמן לו ללכת. הוא לוקח את הסחורה למקום אחר.",
+            [Keys.DealLeftoverSuffix] = " הוא לוקח בחזרה את מה שלא קנית.",
+            [Keys.OfferArmHint] = "הקלד את ההצעה שלך — לחץ Enter או לחץ שוב על הצע.",
+
+            [Keys.SellUnavailable] = "אין קונה לפריט הזה בערוץ הזה.",
+            [Keys.SellNotOwned] = "הפריט הזה כבר לא נמצא על המדפים שלך.",
+            [Keys.SoldFor] = "{0} נמכר תמורת ${1}.",
+            [Keys.ConsequenceCollectorFakeAngry] = " האספן זועם — זה היה זיוף. (מוניטין -2)",
+            [Keys.ConsequenceCollectorHotQuestions] = " האספן שואל שאלות לגבי המקור. (חום +2)",
+            [Keys.ConsequenceCollectorSatisfied] = " אספן מרוצה מפיץ את השם הטוב שלך.",
+            [Keys.ConsequenceBlackMarketHotMoved] = " הוברח בשקט מהעיר, בלי שאלות. (חום -1)",
+            [Keys.ConsequenceBlackMarketCleanNoted] = " החוג של הסוחר שם לב לעסק שלך. (חום +1)",
+            [Keys.ConsequenceShopfrontFakeReturned] = " קונה כועס החזיר את זה כזיוף. (מוניטין -1)",
+            [Keys.ConsequenceShopfrontHotRecognized] = " מישהו זיהה את זה בחלון הראווה — המשטרה שואלת סביב. (חום +3)",
+
+            [Keys.UpgradeAlreadyOwned] = "כבר יש לך את {0}.",
+            [Keys.UpgradeCantAfford] = "אין לך מספיק כסף בשביל {0} — זה עולה ${1} ויש לך ${2}.",
+            [Keys.UpgradeInstalled] = "{0} הותקן. ${1} שהושקעו היטב — כנראה.",
+
+            [Keys.ItemStatsLineCounter] = "מצב: {0} · שווי: {1}",
+            [Keys.ItemStatsLineInventory] = "מצב: {0} · שווי: {1} · שולם ${2}",
+
+            [Keys.CategoryWatches] = "שעונים",
+            [Keys.CategoryJewelry] = "תכשיטים",
+            [Keys.CategoryElectronics] = "אלקטרוניקה",
+            [Keys.CategoryMusicalInstruments] = "כלי נגינה",
+            [Keys.CategoryRetroCollectibles] = "אספנות רטרו",
+            [Keys.CategoryAntiquesCurios] = "עתיקות ותשמישי נוי",
+            [Keys.CategoryLuxuryAccessories] = "אביזרי יוקרה",
+            [Keys.CategoryToolsPracticalGoods] = "כלים ומוצרים שימושיים",
+
+            [Keys.ConditionPristine] = "מושלם",
+            [Keys.ConditionClean] = "נקי",
+            [Keys.ConditionWorn] = "שחוק",
+            [Keys.ConditionDamaged] = "פגום",
+            [Keys.ConditionBroken] = "שבור",
+
+            [Keys.MoodNeutral] = "ניטרלי",
+            [Keys.MoodFriendly] = "ידידותי",
+            [Keys.MoodNervous] = "עצבני",
+            [Keys.MoodImpatient] = "חסר סבלנות",
+            [Keys.MoodDesperate] = "נואש",
+            [Keys.MoodOffended] = "נעלב",
+
+            [Keys.EffectConditionAccuracy] = "בדיקה · מצב",
+            [Keys.EffectFakeDetection] = "בדיקה · זיופים",
+            [Keys.EffectValueAccuracy] = "בדיקה · הערכת שווי",
+            [Keys.EffectTool] = "כלי",
+
             [Keys.MoodAskingLine] = "מצב רוח: {0}     מבוקש: {1}",
+            [Keys.MoodOnlyLine] = "מצב רוח: {0}",
+            [Keys.DealNothingToTrade] = "אין לו כלום שכדאי לך לקנות.",
             [Keys.CustomerTypeHaggler] = "מתמקח",
             [Keys.CustomerTypeDesperate] = "נואש",
             [Keys.CustomerTypeHurryUp] = "ממהר",

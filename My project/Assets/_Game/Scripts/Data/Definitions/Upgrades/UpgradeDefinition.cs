@@ -1,3 +1,4 @@
+using PawnshopKing.Systems.Localization;
 using UnityEngine;
 
 namespace PawnshopKing.Data.Definitions
@@ -28,6 +29,16 @@ namespace PawnshopKing.Data.Definitions
         public string id;
         public string displayName;
         [TextArea] public string description;
+
+        [Header("Hebrew localization (falls back to English above when empty)")]
+        public string displayNameHe;
+        [TextArea] public string descriptionHe;
+
+        public string LocalizedDisplayName =>
+            LanguageManager.IsRtl && !string.IsNullOrEmpty(displayNameHe) ? displayNameHe : displayName;
+
+        public string LocalizedDescription =>
+            LanguageManager.IsRtl && !string.IsNullOrEmpty(descriptionHe) ? descriptionHe : description;
 
         [Header("Shop")]
         [Min(0)] public int cost;

@@ -16,6 +16,8 @@ MonoBehaviour:
   displayName: Rare Game Cartridge
   description: A limited-run cartridge collectors whisper about. Reproduction carts
     look identical from the outside.
+  displayNameHe: קרטרידג' משחק נדיר
+  descriptionHe: קרטרידג' בהפצה מוגבלת שאספנים לוחשים עליו. קרטריג'ים משוכפלים נראים זהים מבחוץ.
   brandOrMaker: Pixelmaster
   era: 1993
   category: 4

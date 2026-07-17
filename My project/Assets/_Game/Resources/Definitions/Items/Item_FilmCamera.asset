@@ -15,6 +15,8 @@ MonoBehaviour:
   id: electronics_film_camera
   displayName: 35mm Film Camera
   description: A workhorse SLR from the early 80s. Film shooters keep these alive.
+  displayNameHe: מצלמת פילם 35 מ״מ
+  descriptionHe: מצלמת SLR עמידה משנות ה-80 המוקדמות. צלמי פילם שומרים על אלה בחיים.
   brandOrMaker: Optika
   era: 1982
   category: 2

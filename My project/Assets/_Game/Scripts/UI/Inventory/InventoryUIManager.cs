@@ -112,7 +112,7 @@ namespace PawnshopKing.UI
 
             var info = HUDUIManager.CreateText(rowGO.transform, "Info", 20f, TextAlignmentOptions.Left);
             info.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
-            info.text = BuildInfo(item);
+            Loc.Set(info, BuildInfo(item));
 
             CreateChannelButton(rowGO.transform, item, SellChannel.Shopfront, LanguageManager.Keys.ChannelShop);
             CreateChannelButton(rowGO.transform, item, SellChannel.Collector, LanguageManager.Keys.ChannelCollector);
@@ -144,8 +144,8 @@ namespace PawnshopKing.UI
         private void OnSellClicked(ItemInstance item, SellChannel channel)
         {
             var receipt = MarketSystem.Sell(gm.State, item, channel);
-            feedbackText.text = receipt.message;
-            if (receipt.sold)
+            Loc.Set(feedbackText, ComposeSellMessage(item, receipt));
+            if (receipt.Sold)
             {
                 UIFx.SpawnMoneyFloater(this, (RectTransform)screenRoot.transform, receipt.price, new Vector2(0f, 120f));
                 Systems.Audio.AudioManager.Instance?.PlayCashGain();
@@ -154,15 +154,45 @@ namespace PawnshopKing.UI
             RebuildList();
         }
 
+        private static string ComposeSellMessage(ItemInstance item, SellReceipt receipt)
+        {
+            switch (receipt.outcome)
+            {
+                case SellOutcome.Unavailable:
+                    return Loc.T(LanguageManager.Keys.SellUnavailable);
+                case SellOutcome.NotOwned:
+                    return Loc.T(LanguageManager.Keys.SellNotOwned);
+                default:
+                    var definition = ItemGenerator.GetDefinition(item.definitionId);
+                    string name = definition != null ? definition.LocalizedDisplayName : item.definitionId;
+                    return Loc.F(LanguageManager.Keys.SoldFor, name, receipt.price.ToString("N0")) + ConsequenceText(receipt.consequence);
+            }
+        }
+
+        private static string ConsequenceText(SellConsequence consequence)
+        {
+            switch (consequence)
+            {
+                case SellConsequence.CollectorFakeAngry: return Loc.T(LanguageManager.Keys.ConsequenceCollectorFakeAngry);
+                case SellConsequence.CollectorHotQuestions: return Loc.T(LanguageManager.Keys.ConsequenceCollectorHotQuestions);
+                case SellConsequence.CollectorSatisfied: return Loc.T(LanguageManager.Keys.ConsequenceCollectorSatisfied);
+                case SellConsequence.BlackMarketHotMoved: return Loc.T(LanguageManager.Keys.ConsequenceBlackMarketHotMoved);
+                case SellConsequence.BlackMarketCleanNoted: return Loc.T(LanguageManager.Keys.ConsequenceBlackMarketCleanNoted);
+                case SellConsequence.ShopfrontFakeReturned: return Loc.T(LanguageManager.Keys.ConsequenceShopfrontFakeReturned);
+                case SellConsequence.ShopfrontHotRecognized: return Loc.T(LanguageManager.Keys.ConsequenceShopfrontHotRecognized);
+                default: return string.Empty;
+            }
+        }
+
         /// <summary>Knowledge-gated summary (GDD 11): unknowns stay "?" here just like on the counter.</summary>
         private static string BuildInfo(ItemInstance item)
         {
             var definition = ItemGenerator.GetDefinition(item.definitionId);
-            string name = definition != null ? definition.displayName : item.definitionId;
-            string category = definition != null ? definition.category.ToString() : "?";
+            string name = definition != null ? definition.LocalizedDisplayName : item.definitionId;
+            string category = definition != null ? LanguageManager.CategoryLabel(definition.category) : "?";
 
             string condition = item.playerKnowledge.HasFlag(KnowledgeFlags.ConditionAssessed)
-                ? item.condition.ToString()
+                ? LanguageManager.ConditionLabel(item.condition)
                 : "?";
 
             string value = "?";
@@ -174,7 +204,13 @@ namespace PawnshopKing.UI
 
             var sb = new StringBuilder();
             sb.Append($"{name}   <color=#9E9A90>{category}</color>");
-            sb.Append($"\n<size=85%>Condition: {condition} · Value: {value} · Paid ${item.acquisitionPrice:N0}</size>");
+            sb.Append($"\n<size=85%>{Loc.F(LanguageManager.Keys.ItemStatsLineInventory, condition, value, item.acquisitionPrice.ToString("N0"))}</size>");
+
+            if (definition != null && !string.IsNullOrEmpty(definition.LocalizedDescription))
+            {
+                sb.Append($"\n<size=85%><i><color=#8A94A8>{definition.LocalizedDescription}</color></i></size>");
+            }
+
             foreach (var clue in item.knownClues)
             {
                 sb.Append($"\n<size=85%><color=#C9B458>»</color> <color=#B8B4AA>{clue}</color></size>");

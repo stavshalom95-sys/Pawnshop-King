@@ -15,6 +15,8 @@ MonoBehaviour:
   id: watch_gold_dress
   displayName: Gold Dress Watch
   description: Slim, elegant, allegedly solid gold. The weight feels almost right.
+  displayNameHe: שעון זהב אלגנטי
+  descriptionHe: דק, אלגנטי, לכאורה זהב טהור. המשקל מרגיש כמעט נכון.
   brandOrMaker: Aurelle
   era: 1970s
   category: 0
