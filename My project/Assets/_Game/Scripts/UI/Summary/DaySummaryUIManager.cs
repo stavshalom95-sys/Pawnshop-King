@@ -178,7 +178,6 @@ namespace PawnshopKing.UI
                 sb.Append($"\n<size=85%><color=#9E9A90>{Loc.F(LanguageManager.Keys.DebtRemaining, s.debt.totalDebt.ToString("N0"))}</color></size>");
             }
 
-            bodyText.alignment = LanguageManager.IsRtl ? TextAlignmentOptions.TopRight : TextAlignmentOptions.TopLeft;
             Loc.Set(bodyText, sb.ToString());
         }
 
@@ -480,7 +479,7 @@ namespace PawnshopKing.UI
             layout.childForceExpandHeight = false;
 
             titleText = HUDUIManager.CreateText(panel, "Title", 34f, TextAlignmentOptions.Left, FontStyles.Bold, header: true);
-            bodyText = HUDUIManager.CreateText(panel, "Body", 24f, TextAlignmentOptions.Left, wrap: true);
+            bodyText = HUDUIManager.CreateText(panel, "Body", 24f, TextAlignmentOptions.TopLeft, wrap: true);
 
             var spacer = new GameObject("Spacer", typeof(RectTransform), typeof(LayoutElement));
             spacer.transform.SetParent(panel, false);

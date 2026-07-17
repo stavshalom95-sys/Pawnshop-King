@@ -85,7 +85,6 @@ namespace PawnshopKing.UI
                 : Loc.T(LanguageManager.Keys.DebtClear);
             string cash = Loc.F(LanguageManager.Keys.DebtPanelCash, s.cash.ToString("N0"));
 
-            infoText.alignment = LanguageManager.IsRtl ? TextAlignmentOptions.Right : TextAlignmentOptions.Left;
             Loc.Set(infoText, next + "\n" + cash);
         }
 

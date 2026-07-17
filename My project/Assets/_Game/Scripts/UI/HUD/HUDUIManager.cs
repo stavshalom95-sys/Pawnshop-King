@@ -614,7 +614,7 @@ namespace PawnshopKing.UI
             var toggleLabel = CreateSmallButton(rowGO.transform, "?", 40f, OnTipToggleClicked);
             toggleLabel.transform.parent.GetComponent<LayoutElement>().preferredHeight = 36f;
 
-            tipText = CreateText(rowGO.transform, "TipText", 19f, TextAlignmentOptions.Right);
+            tipText = CreateText(rowGO.transform, "TipText", 19f, TextAlignmentOptions.Left);
             tipText.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
 
             UpdateTip();
@@ -640,7 +640,6 @@ namespace PawnshopKing.UI
             }
 
             tipBackground.color = UITheme.SurfaceRaised;
-            tipText.alignment = LanguageManager.IsRtl ? TextAlignmentOptions.Right : TextAlignmentOptions.Left;
             Loc.Set(tipText, Loc.T(ChooseTipKey()));
         }
 
@@ -1321,6 +1320,10 @@ namespace PawnshopKing.UI
             text.fontStyle = style;
             text.color = TextColor;
             text.text = string.Empty;
+            // Lets Loc.Set mirror this label's alignment for RTL on every
+            // refresh, using the alignment it was actually built with as the
+            // LTR baseline to mirror around.
+            go.AddComponent<LabelBaseAlignment>().Value = alignment;
             // Explicit, not relying on TMP's default: a localized string (Hebrew
             // in particular) can run longer than the English baseline a container
             // was sized for, and overflow (visible) beats truncate (silently gone).

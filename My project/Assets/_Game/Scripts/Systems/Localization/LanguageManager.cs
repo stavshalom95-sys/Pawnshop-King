@@ -273,6 +273,16 @@ namespace PawnshopKing.Systems.Localization
             public const string DifficultyLabel = "difficulty";
             public const string DifficultyEasy = "difficulty_easy";
             public const string DifficultyHard = "difficulty_hard";
+
+            public const string HowToPlayTitle = "how_to_play_title";
+            public const string HowToPlayInspectTitle = "how_to_play_inspect_title";
+            public const string HowToPlayInspectBody = "how_to_play_inspect_body";
+            public const string HowToPlayHaggleTitle = "how_to_play_haggle_title";
+            public const string HowToPlayHaggleBody = "how_to_play_haggle_body";
+            public const string HowToPlayMoodTitle = "how_to_play_mood_title";
+            public const string HowToPlayMoodBody = "how_to_play_mood_body";
+            public const string HowToPlayValueTitle = "how_to_play_value_title";
+            public const string HowToPlayValueBody = "how_to_play_value_body";
         }
 
         private static readonly Dictionary<string, string> English = new Dictionary<string, string>
@@ -309,6 +319,16 @@ namespace PawnshopKing.Systems.Localization
             [Keys.Settings] = "Settings",
             [Keys.QuitToMenu] = "Quit to Main Menu",
             [Keys.Back] = "Back",
+
+            [Keys.HowToPlayTitle] = "How to Play",
+            [Keys.HowToPlayInspectTitle] = "Inspecting Items",
+            [Keys.HowToPlayInspectBody] = "Click the magnifying glass to examine an item. Each inspection reveals a new clue about its authenticity, condition, or value — the more you inspect, the more you know before you decide.",
+            [Keys.HowToPlayHaggleTitle] = "Haggling",
+            [Keys.HowToPlayHaggleBody] = "Type an offer below the asking price and click Offer, or press Enter to arm it and click Offer again to send it. The seller may accept, counter, or walk away — the lower you open, the more room you have to negotiate.",
+            [Keys.HowToPlayMoodTitle] = "Mood",
+            [Keys.HowToPlayMoodBody] = "Shows how the customer is feeling right now. A patient, friendly mood means more room to negotiate; a frustrated or desperate mood means they might walk — or might take a lowball offer just to be done.",
+            [Keys.HowToPlayValueTitle] = "Value",
+            [Keys.HowToPlayValueBody] = "Your estimate of what an item is really worth, based on what you've inspected so far. It's a range, not a guarantee — trust it more the more you've checked, and remember a good deal beats a fast one.",
             [Keys.PauseNote] = "Progress since this morning isn't saved until the day ends.",
             [Keys.Master] = "Master",
             [Keys.Sfx] = "SFX",
@@ -481,6 +501,16 @@ namespace PawnshopKing.Systems.Localization
             [Keys.Settings] = "הגדרות",
             [Keys.QuitToMenu] = "יציאה לתפריט הראשי",
             [Keys.Back] = "חזרה",
+
+            [Keys.HowToPlayTitle] = "מדריך למשתמש",
+            [Keys.HowToPlayInspectTitle] = "בדיקת פריטים",
+            [Keys.HowToPlayInspectBody] = "לחץ על הזכוכית המגדלת כדי לבחון פריט. כל בדיקה חושפת רמז חדש על האותנטיות, המצב או השווי שלו — ככל שתבדוק יותר, תדע יותר לפני שתחליט.",
+            [Keys.HowToPlayHaggleTitle] = "מיקוח",
+            [Keys.HowToPlayHaggleBody] = "הקלד הצעה מתחת למחיר המבוקש ולחץ על 'הצע', או הקש Enter כדי לתפוס את ההצעה ולחץ שוב על 'הצע' כדי לשלוח אותה. המוכר עשוי לקבל, להציע נגד, או ללכת — ככל שתפתח נמוך יותר, כך יהיה לך יותר מקום למיקוח.",
+            [Keys.HowToPlayMoodTitle] = "מצב רוח",
+            [Keys.HowToPlayMoodBody] = "מראה איך הלקוח מרגיש כרגע. מצב רוח סבלני וידידותי פירושו יותר מקום למיקוח; מצב רוח מתוסכל או נואש פירושו שהוא עלול ללכת — או לקבל הצעה נמוכה רק כדי לסיים.",
+            [Keys.HowToPlayValueTitle] = "שווי",
+            [Keys.HowToPlayValueBody] = "ההערכה שלך לגבי השווי האמיתי של הפריט, בהתבסס על מה שבדקת עד כה. זהו טווח, לא הבטחה — סמוך עליו יותר ככל שבדקת יותר, וזכור שעסקה טובה עדיפה על עסקה מהירה.",
             [Keys.PauseNote] = "ההתקדמות מהבוקר נשמרת רק בסוף היום.",
             [Keys.Master] = "עוצמה כללית",
             [Keys.Sfx] = "אפקטים",

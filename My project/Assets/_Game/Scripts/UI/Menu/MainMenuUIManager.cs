@@ -93,6 +93,8 @@ namespace PawnshopKing.UI
             Close();
         }
 
+        private void OnHowToPlayClicked() => HowToPlayUIManager.Instance?.Open();
+
         // ---- Construction ------------------------------------------------------
 
         private void BuildScreen()
@@ -143,6 +145,9 @@ namespace PawnshopKing.UI
 
             continueLabel = CreateMenuButton(panel.transform, "Continue", OnContinueClicked);
             newGameLabel = CreateMenuButton(panel.transform, "New Game", OnNewGameClicked);
+
+            var howToPlayLabel = CreateMenuButton(panel.transform, "How to Play", OnHowToPlayClicked);
+            LocalizedLabel.Bind(howToPlayLabel, LanguageManager.Keys.HowToPlayTitle);
 
             noticeText = HUDUIManager.CreateText(panel.transform, "Notice", 18f, TextAlignmentOptions.Center, FontStyles.Italic);
             noticeText.color = UITheme.Danger;

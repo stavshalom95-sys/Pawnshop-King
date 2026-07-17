@@ -1,0 +1,846 @@
+PAWNSHOP KING — HEBREW CONTENT AUDIT
+Generated for grammar/flow/natural-phrasing review. English shown for context
+where available; only the Hebrew needs review. Grouped by source file/system
+so a fix can be traced back to its exact location in the code/data.
+
+=====================================================================
+SECTION 1 — UI / SYSTEM STRINGS
+Source: Assets/_Game/Scripts/Systems/Localization/LanguageManager.cs
+(key name shown in brackets; {0}/{1}/etc. are runtime-substituted values)
+=====================================================================
+
+[inventory]
+  EN: Inventory
+  HE: מלאי
+
+[upgrades]
+  EN: Upgrades
+  HE: שדרוגים
+
+[next_customer]
+  EN: Next Customer
+  HE: הלקוח הבא
+
+[close_shop]
+  EN: Close Shop
+  HE: סגור את החנות
+
+[open_day]
+  EN: Open Day {0}
+  HE: פתח את יום {0}
+
+[game_over]
+  EN: Game Over
+  HE: המשחק נגמר
+
+[victory]
+  EN: Campaign Complete
+  HE: הקמפיין הושלם
+
+[day_closing]
+  EN: Day {0} — Closing Time
+  HE: יום {0} — סגירה
+
+[offer]
+  EN: Offer
+  HE: הצע
+
+[buy]
+  EN: Buy
+  HE: קנה
+
+[buy_amount]
+  EN: Buy  ${0}
+  HE: קנה  ${0}
+
+[reject]
+  EN: Reject
+  HE: סרב
+
+[inspect]
+  EN: Inspect ({0})
+  HE: בדוק ({0})
+
+[inspected]
+  EN: Inspected
+  HE: נבדק
+
+[close]
+  EN: Close
+  HE: סגור
+
+[new_campaign]
+  EN: New Campaign
+  HE: קמפיין חדש
+
+[inventory_title]
+  EN: Inventory — {0} item(s)
+  HE: מלאי — {0} פריטים
+
+[upgrades_title]
+  EN: Upgrades — {0}/{1} tools installed
+  HE: שדרוגים — {0}/{1} כלים הותקנו
+
+[installed]
+  EN: Installed
+  HE: הותקן
+
+[channel_shop]
+  EN: Shop
+  HE: חנות
+
+[channel_collector]
+  EN: Collector
+  HE: אספן
+
+[channel_black_market]
+  EN: Black Mkt
+  HE: שוק שחור
+
+[black_market_closed]
+  EN: Raided — closed
+  HE: נסגר בפשיטה
+
+[no_collector]
+  EN: No collector
+  HE: אין אספן
+
+[paused]
+  EN: PAUSED
+  HE: מושהה
+
+[resume]
+  EN: Resume
+  HE: המשך משחק
+
+[settings]
+  EN: Settings
+  HE: הגדרות
+
+[quit_to_menu]
+  EN: Quit to Main Menu
+  HE: יציאה לתפריט הראשי
+
+[back]
+  EN: Back
+  HE: חזרה
+
+[pause_note]
+  EN: Progress since this morning isn't saved until the day ends.
+  HE: ההתקדמות מהבוקר נשמרת רק בסוף היום.
+
+[master]
+  EN: Master
+  HE: עוצמה כללית
+
+[sfx]
+  EN: SFX
+  HE: אפקטים
+
+[music]
+  EN: Music
+  HE: מוזיקה
+
+[language]
+  EN: Language
+  HE: שפה
+
+[language_name]  (shows the ACTIVE language)
+  EN: English
+  HE: עברית
+
+[new_game]
+  EN: New Game
+  HE: משחק חדש
+
+[new_game_erases]
+  EN: New Game (erases save)
+  HE: משחק חדש (מוחק שמירה)
+
+[continue_day]
+  EN: Continue — Day {0}
+  HE: המשך — יום {0}
+
+[save_unreadable]
+  EN: A previous save exists but could not be read.
+  HE: קיימת שמירה קודמת אך לא ניתן לקרוא אותה.
+
+[tip_next_customer]
+  EN: Click Next Customer to call the next customer.
+  HE: לחץ על 'הלקוח הבא' כדי לקרוא ללקוח הבא
+
+[tip_close_shop]
+  EN: Click Close Shop to end the day.
+  HE: לחץ על 'סגור את החנות' כדי לסיים את היום
+
+[tip_inspect]
+  EN: Inspect an item before you buy it.
+  HE: לחץ על 'בדוק' כדי לבדוק את החפץ לפני שקונים
+
+[tip_open_low]
+  EN: Offer below the asking price — haggling is the whole profit.
+  HE: הצע פחות מהמחיר המבוקש — מיקוח הוא כל הרווח
+
+[tip_haggle]
+  EN: Haggle again, buy at their price, or reject.
+  HE: אפשר להתמקח שוב, לקנות במחיר המבוקש או לסרב
+
+[summary_profit]
+  EN: Total profit today:  {0}
+  HE: רווח כולל היום:  {0}
+
+[summary_reputation]
+  EN: Reputation:  {0}   (now {1})
+  HE: מוניטין:  {0}   (כעת {1})
+
+[summary_heat]
+  EN: Heat:  {0}   (now {1})
+  HE: חום משטרתי:  {0}   (כעת {1})
+
+[debt_remaining]
+  EN: Debt remaining: ${0}
+  HE: חוב שנותר: ${0}
+
+[debt_clear]
+  EN: You owe nothing. The shop is yours.
+  HE: אין לך חובות. החנות שלך.
+
+[debt_next]
+  EN: Next payment: ${0} in {1} day(s).
+  HE: התשלום הבא: ${0} בעוד {1} ימים.
+
+[debt_paid]
+  EN: Debt payment of ${0} made. ${1} remains — next payment ${2} in {3} days.
+  HE: שולם תשלום חוב של ${0}. נותרו ${1} — התשלום הבא ${2} בעוד {3} ימים.
+
+[debt_final]
+  EN: Final payment of ${0} made. The inherited debt is PAID OFF.
+  HE: התשלום האחרון של ${0} בוצע. החוב שולם במלואו!
+
+[debt_seized]
+  EN: You couldn't cover the ${0} payment. Creditors seized {1} item(s) at rock-bottom prices. Debt penalty +10%. (Reputation -2)
+  HE: לא הצלחת לכסות את התשלום של ${0}. הנושים החרימו {1} פריטים במחירי רצפה. קנס חוב +10%. (מוניטין -2)
+
+[debt_no_assets]
+  EN: The ${0} payment came due and there was nothing left to take. The shop is finished.
+  HE: הגיע מועד התשלום של ${0} ולא נשאר מה לקחת. החנות אבודה.
+
+[bankrupt]
+  EN: No cash and nothing left to sell — the shop is bankrupt.
+  HE: אין מזומן ואין מה למכור — החנות פשטה רגל.
+
+[heat_police_seized]
+  EN: POLICE VISIT — Officers seized {0} stolen item(s). No compensation. (Reputation -2, Heat -{1})
+  HE: ביקור משטרה — שוטרים החרימו {0} פריטים גנובים. ללא פיצוי. (מוניטין -2, חום -{1})
+
+[heat_police_clean]
+  EN: POLICE VISIT — Officers turned the shop over and left empty-handed. (Heat -{0})
+  HE: ביקור משטרה — השוטרים הפכו את החנות ויצאו בידיים ריקות. (חום -{0})
+
+[heat_raid]
+  EN: BLACK MARKET RAID — No black market sales for {0} days. (Heat -{1})
+  HE: פשיטה על השוק השחור — אין מכירות בשוק השחור למשך {0} ימים. (חום -{1})
+
+[victory_narrative]
+  EN: The inherited debt is history. In {0} days you turned a dying shop into your own — the Pawnshop King.
+  HE: החוב שירשת הוא היסטוריה. בתוך {0} ימים הפכת חנות גוססת לשלך — מלך העבוט.
+
+[victory_stats]
+  EN: Final cash: ${0}\nReputation: {1}   ·   Heat: {2}\nInventory: {3} item(s) still on the shelves\nTools installed: {4}/{5}\nPayments missed along the way: {6}
+  HE: מזומן סופי: ${0}\nמוניטין: {1}   ·   חום: {2}\nמלאי: {3} פריטים על המדפים\nכלים מותקנים: {4}/{5}\nתשלומים שהוחמצו בדרך: {6}
+
+[stamp_paid]
+  EN: PAID
+  HE: שולם
+
+[stamp_seized]
+  EN: SEIZED
+  HE: הוחרם
+
+[debt]
+  EN: Debt
+  HE: חוב
+
+[debt_panel_title]
+  EN: Debt — ${0} owed
+  HE: חוב — ${0} לתשלום
+
+[debt_panel_cash]
+  EN: Cash on hand: ${0}
+  HE: מזומן בקופה: ${0}
+
+[debt_panel_pay]
+  EN: Pay
+  HE: שלם
+
+[debt_panel_enter_amount]
+  EN: Enter an amount to pay first.
+  HE: הזן סכום לתשלום קודם.
+
+[debt_panel_insufficient_cash]
+  EN: You don't have that much cash.
+  HE: אין לך מספיק מזומן.
+
+[debt_panel_paid]
+  EN: Paid ${0} toward the debt. ${1} remains.
+  HE: שולם ${0} על חשבון החוב. נותרו ${1}.
+
+[debt_panel_paid_cleared]
+  EN: Paid ${0}. The debt is clear!
+  HE: שולם ${0}. החוב נפרע במלואו!
+
+[offer_placeholder]
+  EN: offer $
+  HE: הצעה $
+
+[debt_pay_placeholder]
+  EN: amount $
+  HE: סכום $
+
+[day_bar_label]
+  EN: Day {0}
+  HE: יום {0}
+
+[cash_bar_label]
+  EN: Cash  ${0}
+  HE: מזומן  ${0}
+
+[reputation_bar_label]
+  EN: Rep  {0}
+  HE: מוניטין  {0}
+
+[heat_bar_label]
+  EN: Heat  {0}
+  HE: חום  {0}
+
+[debt_bar_label]
+  EN: Debt  ${0}  (${1} due in {2}d)
+  HE: חוב  ${0}  (${1} בעוד {2} ימים)
+
+[debt_bar_cleared]
+  EN: Debt  cleared
+  HE: חוב  נפרע
+
+[reputation_tooltip]
+  EN: High reputation attracts wealthier customers.
+  HE: מוניטין גבוה מושך לקוחות עשירים יותר
+
+[heat_tooltip]
+  EN: As heat rises, the risk of a police raid increases.
+  HE: ככל שהחום עולה, הסיכון לפשיטה משטרתית גובר
+
+[deal_accepted]
+  EN: Deal. You hand over ${0}.{1}
+  HE: עסקה סגורה. אתה מעביר ${0}.{1}
+
+[deal_accepted_reluctantly]
+  EN: "Fine. Just give me the money." You pay ${0}.{1}
+  HE: "בסדר, רק תן לי את הכסף." אתה משלם ${0}.{1}
+
+[deal_countered]
+  EN: "Make it ${0} and we're done."
+  HE: "שיהיה ${0} וסגרנו."
+
+[deal_offended]
+  EN: "Insulting." They storm out. Word gets around. (Reputation -1)
+  HE: "עלבון." הוא יוצא בכעס. השם שלך ייפגע. (מוניטין -1)
+
+[deal_gave_up]
+  EN: "Forget it." They pack up and leave.
+  HE: "עזוב, לא משנה." הוא אוסף את החפצים והולך.
+
+[deal_check_at_least_one]
+  EN: Check at least one item to deal on.
+  HE: סמן לפחות פריט אחד כדי לבצע עסקה.
+
+[deal_no_cash_for_offer]
+  EN: You can't cover that offer.
+  HE: אין לך מספיק מזומן לכסות את ההצעה.
+
+[deal_no_cash_for_asking]
+  EN: You don't have the cash for their price.
+  HE: אין לך מספיק מזומן במחיר המבוקש.
+
+[deal_bought_at_asking]
+  EN: Bought at asking price — ${0}. Fair dealing. (Reputation +1){1}
+  HE: נקנה במחיר המבוקש — ${0}. עסקה הוגנת. (מוניטין +1){1}
+
+[deal_rejected]
+  EN: You wave them off. They take their goods elsewhere.
+  HE: אתה מסמן לו ללכת. הוא לוקח את הסחורה למקום אחר.
+
+[deal_leftover_suffix]
+  EN:  They pocket what you passed on.
+  HE:  הוא לוקח בחזרה את מה שלא קנית.
+
+[offer_arm_hint]
+  EN: Type your offer — press Enter or hit Offer again.
+  HE: הקלד את ההצעה שלך — לחץ Enter או לחץ שוב על הצע.
+
+[sell_unavailable]
+  EN: No buyer wants this through that channel.
+  HE: אין קונה לפריט הזה בערוץ הזה.
+
+[sell_not_owned]
+  EN: That item is no longer on your shelves.
+  HE: הפריט הזה כבר לא נמצא על המדפים שלך.
+
+[sold_for]
+  EN: {0} sold for ${1}.
+  HE: {0} נמכר תמורת ${1}.
+
+[consequence_collector_fake_angry]
+  EN:  The collector is furious — it was a fake. (Reputation -2)
+  HE:  האספן זועם — זה היה זיוף. (מוניטין -2)
+
+[consequence_collector_hot_questions]
+  EN:  The collector asks pointed questions about provenance. (Heat +2)
+  HE:  האספן שואל שאלות לגבי המקור. (חום +2)
+
+[consequence_collector_satisfied]
+  EN:  A satisfied collector spreads the word.
+  HE:  אספן מרוצה מפיץ את השם הטוב שלך.
+
+[consequence_bm_hot_moved]
+  EN:  Moved quietly out of town, no questions asked. (Heat -1)
+  HE:  הוברח בשקט מהעיר, בלי שאלות. (חום -1)
+
+[consequence_bm_clean_noted]
+  EN:  The fence's circle takes note of your business. (Heat +1)
+  HE:  החוג של הסוחר שם לב לעסק שלך. (חום +1)
+
+[consequence_shop_fake_returned]
+  EN:  An angry buyer brought it back as counterfeit. (Reputation -1)
+  HE:  קונה כועס החזיר את זה כזיוף. (מוניטין -1)
+
+[consequence_shop_hot_recognized]
+  EN:  Someone recognized it in the window — police are asking around. (Heat +3)
+  HE:  מישהו זיהה את זה בחלון הראווה — המשטרה שואלת סביב. (חום +3)
+
+[upgrade_already_owned]
+  EN: You already own the {0}.
+  HE: כבר יש לך את {0}.
+
+[upgrade_cant_afford]
+  EN: You can't afford the {0} — it's ${1} and you have ${2}.
+  HE: אין לך מספיק כסף בשביל {0} — זה עולה ${1} ויש לך ${2}.
+
+[upgrade_installed]
+  EN: {0} installed. ${1} well spent — probably.
+  HE: {0} הותקן. ${1} שהושקעו היטב — כנראה.
+
+[item_stats_line_counter]
+  EN: Condition: {0} · Value: {1}
+  HE: מצב: {0} · שווי: {1}
+
+[item_stats_line_inventory]
+  EN: Condition: {0} · Value: {1} · Paid ${2}
+  HE: מצב: {0} · שווי: {1} · שולם ${2}
+
+[category_watches]
+  EN: Watches
+  HE: שעונים
+
+[category_jewelry]
+  EN: Jewelry
+  HE: תכשיטים
+
+[category_electronics]
+  EN: Electronics
+  HE: אלקטרוניקה
+
+[category_musical_instruments]
+  EN: Musical Instruments
+  HE: כלי נגינה
+
+[category_retro_collectibles]
+  EN: Retro Collectibles
+  HE: אספנות רטרו
+
+[category_antiques_curios]
+  EN: Antiques & Curios
+  HE: עתיקות ותשמישי נוי
+
+[category_luxury_accessories]
+  EN: Luxury Accessories
+  HE: אביזרי יוקרה
+
+[category_tools_practical_goods]
+  EN: Tools & Practical Goods
+  HE: כלים ומוצרים שימושיים
+
+[condition_pristine]
+  EN: Pristine
+  HE: מושלם
+
+[condition_clean]
+  EN: Clean
+  HE: נקי
+
+[condition_worn]
+  EN: Worn
+  HE: שחוק
+
+[condition_damaged]
+  EN: Damaged
+  HE: פגום
+
+[condition_broken]
+  EN: Broken
+  HE: שבור
+
+[mood_neutral]
+  EN: Neutral
+  HE: ניטרלי
+
+[mood_friendly]
+  EN: Friendly
+  HE: ידידותי
+
+[mood_nervous]
+  EN: Nervous
+  HE: עצבני
+
+[mood_impatient]
+  EN: Impatient
+  HE: חסר סבלנות
+
+[mood_desperate]
+  EN: Desperate
+  HE: נואש
+
+[mood_offended]
+  EN: Offended
+  HE: נעלב
+
+[effect_condition_accuracy]
+  EN: Inspection · Condition
+  HE: בדיקה · מצב
+
+[effect_fake_detection]
+  EN: Inspection · Counterfeits
+  HE: בדיקה · זיופים
+
+[effect_value_accuracy]
+  EN: Inspection · Valuation
+  HE: בדיקה · הערכת שווי
+
+[effect_tool]
+  EN: Tool
+  HE: כלי
+
+[shop_open_name]
+  EN: Shop is open
+  HE: החנות פתוחה
+
+[shop_closed_name]
+  EN: Shop closed
+  HE: החנות סגורה
+
+[waiting_for_first_customer]
+  EN: Waiting for the first customer...
+  HE: ממתין ללקוח הראשון...
+
+[day_is_over]
+  EN: Day {0} is over. The debt clock ticks on.
+  HE: יום {0} הסתיים. שעון החוב ממשיך לתקתק.
+
+[queue_customers_today]
+  EN: {0} customers in the queue today
+  HE: {0} לקוחות בתור היום
+
+[queue_last_customer]
+  EN: Last customer of the day
+  HE: הלקוח האחרון של היום
+
+[queue_more_waiting]
+  EN: {0} more waiting outside
+  HE: עוד {0} מחכים בחוץ
+
+[mood_asking_line]
+  EN: Mood: {0}     Asking: {1}
+  HE: מצב רוח: {0}     מבוקש: {1}
+
+[mood_only_line]
+  EN: Mood: {0}
+  HE: מצב רוח: {0}
+
+[deal_nothing_to_trade]
+  EN: They have nothing you'd trade for.
+  HE: אין לו כלום שכדאי לך לקנות.
+
+[customer_type_haggler]
+  EN: Haggler
+  HE: מתמקח
+
+[customer_type_desperate]
+  EN: Desperate
+  HE: נואש
+
+[customer_type_hurryup]
+  EN: In a Hurry
+  HE: ממהר
+
+[on]
+  EN: On
+  HE: פועל
+
+[off]
+  EN: Off
+  HE: כבוי
+
+[difficulty]
+  EN: Difficulty
+  HE: רמת קושי
+
+[difficulty_easy]
+  EN: Easy
+  HE: קל
+
+[difficulty_hard]
+  EN: Hard
+  HE: קשה
+
+
+=====================================================================
+SECTION 2 — ITEMS
+Source: Assets/_Game/Resources/Definitions/Items/*.asset
+(displayName / description fields)
+=====================================================================
+
+-- Item_GoldRing (jewelry_gold_ring) --
+Display Name EN: Gold Ring
+Display Name HE: טבעת זהב
+Description EN: A plain band, stamped 18k. Rings are the easiest thing in the world to fake a stamp on.
+Description HE: טבעת פשוטה, עם חותמת 18 קראט. טבעות הן הדבר הכי קל בעולם לזייף עליו חותמת.
+
+-- Item_PearlNecklace (jewelry_pearl_necklace) --
+Display Name EN: Pearl Necklace
+Display Name HE: שרשרת פנינים
+Description EN: Estate-sale pearls with a silver clasp. Cultured, natural, or glass?
+Description HE: פנינים ממכירת עיזבון עם אבזם כסף. מתורבתות, טבעיות, או זכוכית?
+
+-- Item_SilverBrooch (jewelry_silver_brooch) --
+Display Name EN: Antique Silver Brooch
+Display Name HE: סיכת כסף עתיקה
+Description EN: Art nouveau silverwork, tarnished but intact. The kind of thing heirs undervalue.
+Description HE: עבודת כסף בסגנון ארט נובו, מוכתמת אך שלמה. הסוג של דבר שיורשים מזלזלים בערכו.
+
+-- Item_FieldWatch (watch_field) --
+Display Name EN: Military Field Watch
+Display Name HE: שעון שדה צבאי
+Description EN: Wartime issue with a worn canvas strap. Collectors pay well for the real thing.
+Description HE: שעון מתקופת מלחמה עם רצועת בד שחוקה. אספנים משלמים היטב על הפריט האמיתי.
+
+-- Item_GoldDressWatch (watch_gold_dress) --
+Display Name EN: Gold Dress Watch
+Display Name HE: שעון זהב אלגנטי
+Description EN: Slim, elegant, allegedly solid gold. The weight feels almost right.
+Description HE: דק, אלגנטי, לכאורה זהב טהור. המשקל מרגיש כמעט נכון.
+
+-- Item_VintageDiverWatch (watch_vintage_diver) --
+Display Name EN: Vintage Diver Watch
+Display Name HE: שעון צלילה וינטג'
+Description EN: A 1960s diver with a scratched crystal. The movement sounds right, but so do good fakes.
+Description HE: שעון צלילה משנות ה-60 עם זכוכית שרוטה. המנגנון נשמע תקין, אבל כך גם זיופים טובים.
+
+-- Item_Smartphone (electronics_smartphone) --
+Display Name EN: Recent-Model Smartphone
+Display Name HE: סמארטפון דגם עדכני
+Description EN: Nearly new, no box, no charger, price too good. Ask yourself why.
+Description HE: כמעט חדש, בלי קופסה, בלי מטען, מחיר טוב מדי. תשאל את עצמך למה.
+
+-- Item_FilmCamera (electronics_film_camera) --
+Display Name EN: 35mm Film Camera
+Display Name HE: מצלמת פילם 35 מ״מ
+Description EN: A workhorse SLR from the early 80s. Film shooters keep these alive.
+Description HE: מצלמת SLR עמידה משנות ה-80 המוקדמות. צלמי פילם שומרים על אלה בחיים.
+
+-- Item_StudioHeadphones (electronics_headphones) --
+Display Name EN: Studio Headphones
+Display Name HE: אוזניות אולפן
+Description EN: Pro-grade cans with fresh ear pads. Knockoffs of this model flooded the market last year.
+Description HE: אוזניות ברמה מקצועית עם כריות חדשות. חיקויים של הדגם הזה הציפו את השוק בשנה שעברה.
+
+-- Item_RetroConsole (retro_console) --
+Display Name EN: Retro Game Console
+Display Name HE: קונסולת משחקים רטרו
+Description EN: A 16-bit classic, yellowed with age. Works, mostly, sometimes.
+Description HE: קלאסיקה בת 16 סיביות, מוצהבת מרוב שנים. עובדת, בעיקר, לפעמים.
+
+-- Item_RareCartridge (retro_cartridge_rare) --
+Display Name EN: Rare Game Cartridge
+Display Name HE: קרטרידג' משחק נדיר
+Description EN: A limited-run cartridge collectors whisper about. Reproduction carts look identical from the outside.
+Description HE: קרטרידג' בהפצה מוגבלת שאספנים לוחשים עליו. קרטריג'ים משוכפלים נראים זהים מבחוץ.
+NOTE: "קרטרידג'" and "קרטריג'ים" — same word spelled two different ways in the same entry (name vs description). Worth reconciling to one spelling.
+
+-- Item_FirstPrintComic (retro_comic_first_print) --
+Display Name EN: First-Print Comic Issue
+Display Name HE: גיליון קומיקס הדפסה ראשונה
+Description EN: Bagged and boarded. Condition is everything, and light does terrible things to old paper.
+Description HE: ארוז ומוגן. המצב הוא הכול, ואור עושה דברים נוראיים לנייר ישן.
+
+
+=====================================================================
+SECTION 3 — CUSTOMERS
+Source: Assets/_Game/Resources/Definitions/Customers/*.asset
+(displayName / dialoguePool / originHints fields)
+=====================================================================
+
+-- Customer_Fence (fence) --
+Display Name EN: Professional Fence
+Display Name HE: סוחר גנוב מקצועי
+Dialogue:
+  1. EN: Don't ask where it came from and I'll make the price nice.
+     HE: אל תשאל מאיפה זה הגיע ואני אעשה מחיר נחמד.
+  2. EN: Quick and quiet, that's how I like it.
+     HE: מהר ובשקט, ככה אני אוהב.
+  3. EN: You move this fast, there's more where it came from.
+     HE: אתה מזיז את זה מהר, יש עוד מאיפה זה בא.
+Origin Hints:
+  1. EN: They can't tell you a single thing about where it's from.
+     HE: הוא לא יכול לספר לך שום דבר על המקור.
+  2. EN: When you reach for the serial number, they suggest you don't bother.
+     HE: כשאתה מנסה לבדוק את המספר הסידורי, הוא מציע לך לא לטרוח.
+  3. EN: They want it gone tonight, price be damned.
+     HE: הוא רוצה שזה ייעלם הלילה, לא משנה המחיר.
+
+-- Customer_AmateurScammer (amateur_scammer) --
+Display Name EN: Amateur Scammer
+Display Name HE: רמאי חובבן
+Dialogue:
+  1. EN: It's one hundred percent genuine, I had the certificate somewhere.
+     HE: זה מאה אחוז אותנטי, הייתה לי תעודה איפשהו.
+  2. EN: Look, I'm in a hurry, can we do this fast?
+     HE: תשמע, אני ממהר, אפשר לעשות את זה מהר?
+  3. EN: A friend of mine sold one just like it for triple.
+     HE: חבר שלי מכר אחד בדיוק כזה בשלוש פעמים המחיר.
+Origin Hints:
+  1. EN: They keep insisting it's genuine before you've even asked.
+     HE: הוא ממשיך להתעקש שזה אותנטי עוד לפני ששאלת.
+  2. EN: The story about where they got it changes mid-sentence.
+     HE: הסיפור על איפה הוא השיג את זה משתנה באמצע המשפט.
+  3. EN: They watch your face while you handle it, not the item.
+     HE: הוא צופה בפנים שלך בזמן שאתה בודק, לא בפריט.
+
+-- Customer_CasualSeller (casual_seller) --
+Display Name EN: Casual Home Seller
+Display Name HE: מוכר ביתי מזדמן
+Dialogue:
+  1. EN: Found this while clearing out my aunt's attic. Any good?
+     HE: מצאתי את זה כשפיניתי את עליית הגג של הדודה שלי. שווה משהו?
+  2. EN: No idea what it's worth, honestly.
+     HE: אין לי מושג כמה זה שווה, בכנות.
+  3. EN: If you don't want it, I'll probably just throw it out.
+     HE: אם אתה לא רוצה את זה, כנראה שפשוט אזרוק את זה.
+(No origin hints for this archetype — low-risk seller, matches its risk profile of 0/0.)
+
+-- Customer_DesperateSeller (desperate_seller) --
+Display Name EN: Desperate Seller
+Display Name HE: מוכר נואש
+Dialogue:
+  1. EN: Please, I need this money today.
+     HE: בבקשה, אני צריך את הכסף הזה היום.
+  2. EN: Just give me something for it, anything reasonable.
+     HE: רק תן לי משהו בשבילו, כל דבר סביר.
+  3. EN: It was my father's. I wouldn't sell it if I had a choice.
+     HE: זה היה של אבא שלי. לא הייתי מוכר אם הייתה לי ברירה.
+(No origin hints for this archetype.)
+
+
+=====================================================================
+SECTION 4 — UPGRADES
+Source: Assets/_Game/Resources/Definitions/Upgrades/*.asset
+=====================================================================
+
+-- Upgrade_Magnifier (magnifier) --
+Display Name EN: Magnifier
+Display Name HE: זכוכית מגדלת
+Description EN: A proper jeweler's loupe. Wear, hairline cracks, and botched repairs stop hiding from you — condition reads almost never fail.
+Description HE: לופה אמיתית של תכשיטנים. בלאי, סדקים דקים ותיקונים כושלים מפסיקים להסתתר ממך — בדיקות מצב כמעט אף פעם לא נכשלות.
+
+-- Upgrade_UVLight (uv_light) --
+Display Name EN: UV Light
+Display Name HE: מנורת UV
+Description EN: Modern glue, retouched engravings, and fresh paint fluoresce under it. Counterfeits give themselves away far more often.
+Description HE: דבק מודרני, חריטות משוחזרות וצבע טרי זוהרים תחתיה. זיופים חושפים את עצמם הרבה יותר לעיתים קרובות.
+
+-- Upgrade_ReferenceGuide (reference_guide) --
+Display Name EN: Antique Reference Guide
+Display Name HE: מדריך עתיקות
+Description EN: Dog-eared price catalogues and auction records. Your value estimates land in a noticeably tighter band around the truth.
+Description HE: קטלוגי מחירים משומשים ורשומות מכירות פומביות. הערכות השווי שלך נופלות בטווח הדוק בהרבה סביב האמת.
+
+
+=====================================================================
+SECTION 5 — INSPECTION CLUES
+Source: Assets/_Game/Scripts/Systems/Inspection/InspectionSystem.cs
+(random pools revealed during item inspection; parallel EN/HE arrays)
+=====================================================================
+
+-- Fake tells (counterfeit clues) --
+  1. EN: Logo engraving is slightly off-center.
+     HE: החריטה של הלוגו קצת לא ממורכזת.
+  2. EN: Gold weight seems low.
+     HE: משקל הזהב נראה נמוך מדי.
+  3. EN: Packaging is suspiciously perfect for its age.
+     HE: האריזה מושלמת בצורה חשודה בשביל הגיל שלה.
+  4. EN: The finish looks far too fresh for the claimed age.
+     HE: הגימור נראה חדש מדי בשביל הגיל הנטען.
+
+-- Stolen tells --
+  1. EN: Serial sticker looks recently replaced.
+     HE: מדבקת המספר הסידורי נראית מוחלפת לאחרונה.
+  2. EN: Back panel screws were recently opened.
+     HE: ברגי הפלטה האחורית נפתחו לאחרונה.
+  3. EN: The seller avoids eye contact when you ask about its origin.
+     HE: המוכר נמנע ממגע עין כשאתה שואל על המקור.
+  4. EN: Engraved initials have been buffed out.
+     HE: אותיות חקוקות נשחקו במכוון.
+
+-- Nothing tells (clean read, no issue found) --
+  1. EN: Nothing else jumps out at you.
+     HE: שום דבר נוסף לא בולט לעין.
+  2. EN: Honest wear, consistent with its age.
+     HE: בלאי כן, תואם לגיל הפריט.
+  3. EN: It smells faintly of smoke and basement.
+     HE: יש ריח קלוש של עשן ומרתף.
+
+-- Condition-read misses (failed pass, no grade revealed) --
+  1. EN: Hard to get a good read in this light — a magnifier would help.
+     HE: קשה לקבל תמונה ברורה באור הזה — זכוכית מגדלת הייתה עוזרת.
+  2. EN: The wear could be surface-level, or could run deep. You can't tell.
+     HE: הבלאי יכול להיות שטחי או עמוק. אי אפשר לדעת.
+  3. EN: You squint at it, but can't call its condition either way.
+     HE: אתה מצמצם עיניים, אבל לא מצליח לקבוע את המצב.
+
+-- Condition clues (successful read, by grade) --
+  Pristine  EN: Untouched — barely a mark on it.
+            HE: לא נגוע — כמעט בלי סימן.
+  Clean     EN: Good shape overall.
+            HE: מצב טוב באופן כללי.
+  Worn      EN: Real wear on the edges and corners.
+            HE: בלאי אמיתי בקצוות ובפינות.
+  Damaged   EN: Visible damage — it would need work.
+            HE: נזק גלוי לעין — יידרש טיפול.
+  Broken    EN: It doesn't work at all.
+            HE: זה לא עובד בכלל.
+  (fallback) EN: Condition noted.
+             HE: מצב תועד.
+
+-- Value estimate (Pass 2 line, {low}/{high} are dollar figures) --
+  EN: You'd put it somewhere around ${low}–${high}.
+  HE: אתה מעריך את זה בסביבות ${low}–${high}.
+
+-- Fallback lines (pool exhausted / no new clue left) --
+  EN: Still no clear read on its condition.
+  HE: עדיין אין קריאה ברורה על מצב הפריט.
+
+  EN: Nothing new catches your eye.
+  HE: שום דבר חדש לא בולט לעין.
+
+
+=====================================================================
+END OF EXPORT
+=====================================================================

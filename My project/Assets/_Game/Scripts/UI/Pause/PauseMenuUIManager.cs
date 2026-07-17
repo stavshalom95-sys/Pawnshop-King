@@ -133,6 +133,8 @@ namespace PawnshopKing.UI
             MainMenuUIManager.Instance?.Show();
         }
 
+        private void OnHowToPlayClicked() => HowToPlayUIManager.Instance?.Open();
+
         // ---- Construction ------------------------------------------------------
 
         private void BuildScreen()
@@ -207,6 +209,7 @@ namespace PawnshopKing.UI
             AddSpacer(content, 12f);
             CreateMenuButton(content, LanguageManager.Keys.Resume, Close);
             CreateMenuButton(content, LanguageManager.Keys.Settings, ShowSettingsView);
+            CreateMenuButton(content, LanguageManager.Keys.HowToPlayTitle, OnHowToPlayClicked);
             CreateMenuButton(content, LanguageManager.Keys.QuitToMenu, OnQuitToMenuClicked);
 
             var note = HUDUIManager.CreateText(content, "Note", 16f, TextAlignmentOptions.Center, FontStyles.Italic);

@@ -34,7 +34,42 @@ namespace PawnshopKing.UI
             label.characterSpacing = rtl ? UITheme.HebrewCharacterSpacing : englishSpacing;
 
             label.text = rtl ? UITheme.PrepareRtl(text) : text;
+
+            // Mirrors alignment around the label's original LTR baseline (stashed
+            // by CreateText — see LabelBaseAlignment) every time text is set, not
+            // just once at creation. Automatic for every label built through the
+            // shared helper, so a new call site can't reintroduce left-aligned
+            // Hebrew by forgetting a manual flip — that's exactly how dialogue and
+            // item-description panels ended up left-aligned in the first place.
+            var baseAlignment = label.GetComponent<LabelBaseAlignment>();
+            if (baseAlignment != null)
+            {
+                label.alignment = rtl ? MirrorAlignment(baseAlignment.Value) : baseAlignment.Value;
+            }
         }
+
+        internal static TextAlignmentOptions MirrorAlignment(TextAlignmentOptions ltrAlignment)
+        {
+            switch (ltrAlignment)
+            {
+                case TextAlignmentOptions.Left: return TextAlignmentOptions.Right;
+                case TextAlignmentOptions.Right: return TextAlignmentOptions.Left;
+                case TextAlignmentOptions.TopLeft: return TextAlignmentOptions.TopRight;
+                case TextAlignmentOptions.TopRight: return TextAlignmentOptions.TopLeft;
+                default: return ltrAlignment; // Center and friends need no mirroring.
+            }
+        }
+    }
+
+    /// <summary>
+    /// Stashes the alignment a label was created with (its LTR baseline) so
+    /// Loc.Set can mirror around it on every call, in both directions, instead
+    /// of only being correct the first time or drifting after repeated
+    /// language switches. Attached by HUDUIManager.CreateText.
+    /// </summary>
+    internal class LabelBaseAlignment : MonoBehaviour
+    {
+        public TextAlignmentOptions Value;
     }
 
     /// <summary>
