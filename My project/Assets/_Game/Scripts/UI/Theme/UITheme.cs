@@ -47,21 +47,16 @@ namespace PawnshopKing.UI
         private static TMP_FontAsset hebrewFont;
 
         /// <summary>
-        /// Typewriter/tech display face for headers — loaded from a checked-in,
-        /// statically-baked TMP_FontAsset (see Scripts/Editor/FontAssetBaker.cs)
-        /// rather than built at runtime. Falls back to the TMP default sans if
-        /// the asset is somehow missing.
+        /// Typewriter/tech display face for headers. There's no checked-in
+        /// header TTF and no OS-font baking path (see HebrewFont for why OS
+        /// fonts were dropped) — this always falls back to the TMP default
+        /// sans until a header-specific TTF and bake step are added.
         /// </summary>
         public static TMP_FontAsset HeaderFont
         {
             get
             {
                 if (headerFont != null) return headerFont;
-
-                headerFont = Resources.Load<TMP_FontAsset>("Fonts/HeaderFontAsset");
-                if (headerFont != null) return headerFont;
-
-                Debug.LogWarning("[UITheme] HeaderFontAsset not found — run Tools > Pawnshop King > Bake Font Assets. Falling back to TMP default.");
                 headerFont = TMP_Settings.defaultFontAsset;
                 return headerFont;
             }
@@ -70,15 +65,13 @@ namespace PawnshopKing.UI
         /// <summary>
         /// Hebrew-capable font for localized labels — the TMP default atlas is
         /// Latin-only and would render tofu. Loaded from a checked-in,
-        /// statically-baked TMP_FontAsset (see Scripts/Editor/FontAssetBaker.cs)
-        /// built from Segoe UI with every glyph the game uses pre-populated and
-        /// the atlas locked to Static. This project previously built this font
-        /// at runtime, generating and populating its glyph atlas dynamically
-        /// every play session; playtesting turned up real glyph corruption from
-        /// that (wrong or missing individual Hebrew characters inside otherwise
-        /// correctly-ordered words, e.g. "ימים" losing its leading letter to
-        /// render as "מים"). A statically baked asset removes runtime atlas
-        /// population as a variable entirely.
+        /// statically-baked TMP_FontAsset (Resources/Fonts/HebrewFontAsset.asset,
+        /// produced by Scripts/Editor/FontAssetBaker.cs from Resources/Fonts/Hebrew.ttf).
+        /// The baker used to run automatically on every Editor load and source
+        /// glyphs from an OS system font (Segoe UI) — OS font loading failed
+        /// outright in this environment and crashed the project on startup, so
+        /// baking is now manual-only (Tools > Pawnshop King > Bake Hebrew Font
+        /// Asset) and sources from this project's own TTF file instead.
         /// </summary>
         public static TMP_FontAsset HebrewFont
         {
@@ -89,7 +82,7 @@ namespace PawnshopKing.UI
                 hebrewFont = Resources.Load<TMP_FontAsset>("Fonts/HebrewFontAsset");
                 if (hebrewFont != null) return hebrewFont;
 
-                Debug.LogWarning("[UITheme] HebrewFontAsset not found — run Tools > Pawnshop King > Bake Font Assets. Hebrew text will render as boxes.");
+                Debug.LogWarning("[UITheme] HebrewFontAsset not found — run Tools > Pawnshop King > Bake Hebrew Font Asset. Hebrew text will render as boxes.");
                 hebrewFont = TMP_Settings.defaultFontAsset;
                 return hebrewFont;
             }
