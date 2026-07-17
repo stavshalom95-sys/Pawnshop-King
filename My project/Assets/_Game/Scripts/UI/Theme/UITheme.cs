@@ -39,9 +39,10 @@ namespace PawnshopKing.UI
         // ---- Typography ----
         public const float HeaderCharacterSpacing = 5f;
 
-        // Deliberately generous, not subtle — a direct, visible response to
-        // reported glyph-overlap, not a cosmetic nudge.
-        public const float HebrewCharacterSpacing = 4f;
+        // Modest breathing room now that HebrewFont is a well-hinted system
+        // font — the earlier 4f was compensating for a font asset whose own
+        // glyph metrics were the actual problem (see HebrewFont).
+        public const float HebrewCharacterSpacing = 1.5f;
 
         private static TMP_FontAsset headerFont;
 
@@ -59,7 +60,6 @@ namespace PawnshopKing.UI
         {
             headerFont = null;
             hebrewFont = null;
-            hebrewFontFromProject = false;
         }
 
         /// <summary>
@@ -89,77 +89,49 @@ namespace PawnshopKing.UI
         }
 
         private static TMP_FontAsset hebrewFont;
-        private static bool hebrewFontFromProject;
 
         /// <summary>
         /// Hebrew-capable font for localized labels — the TMP default atlas is
-        /// Latin-only and would render tofu. Prefers a shipped project font
-        /// (drop a STATIC-weight TTF with Hebrew coverage, e.g. Assistant or
-        /// Heebo, at Resources/Fonts/Hebrew.ttf) so every platform renders
-        /// identically; falls back to an OS font with Hebrew coverage. Glyph
-        /// atlases populate dynamically, so no editor-baked TMP asset is required.
+        /// Latin-only and would render tofu. Built from an OS system font
+        /// (Segoe UI on Windows, falling back to Arial/Tahoma) rather than the
+        /// project's bundled Hebrew.ttf: that TTF's own glyph metrics were dense
+        /// enough that even an aggressively padded, oversampled SDF atlas
+        /// (CreateFontAssetGenerous) still rendered overlapping ("swallowed")
+        /// characters at small UI sizes — the atlas settings were never the real
+        /// problem, the source font was. System fonts are hinted for small-scale
+        /// legibility, so this deliberately uses TMP's own default atlas build
+        /// (TMP_FontAsset.CreateFontAsset(Font), no custom padding/sampling) —
+        /// those defaults are tuned against ordinary system fonts like these.
+        /// Glyph atlases populate dynamically, so no editor-baked TMP asset or
+        /// project font file is required.
         /// </summary>
         public static TMP_FontAsset HebrewFont
         {
             get
             {
-#if UNITY_EDITOR
-                // Statics survive play sessions with domain reload disabled, so a
-                // fallback cached before the project TTF existed would stick
-                // forever. While serving a fallback, keep re-checking for the
-                // project font; labels pick it up on their next refresh.
-                if (hebrewFont != null && !hebrewFontFromProject)
-                {
-                    var lateProjectFont = TryCreateProjectHebrewFont();
-                    if (lateProjectFont != null)
-                    {
-                        hebrewFont = lateProjectFont;
-                        hebrewFontFromProject = true;
-                    }
-                }
-#endif
                 if (hebrewFont != null) return hebrewFont;
-
-                hebrewFont = TryCreateProjectHebrewFont();
-                if (hebrewFont != null)
-                {
-                    hebrewFontFromProject = true;
-                    return hebrewFont;
-                }
 
                 foreach (var name in new[] { "Segoe UI", "Arial", "Tahoma" })
                 {
                     var osFont = Font.CreateDynamicFontFromOSFont(name, 32);
                     if (osFont == null) continue;
 
-                    hebrewFont = CreateFontAssetGenerous(osFont);
-                    if (hebrewFont != null)
-                    {
-                        Debug.LogWarning("[UITheme] Using OS font fallback for Hebrew — drop a static-weight TTF at Resources/Fonts/Hebrew.ttf for consistent cross-platform rendering.");
-                        return hebrewFont;
-                    }
+                    hebrewFont = TMP_FontAsset.CreateFontAsset(osFont);
+                    if (hebrewFont != null) return hebrewFont;
                 }
 
-                Debug.LogWarning("[UITheme] No Hebrew-capable font found — Hebrew text will render as boxes. Add Resources/Fonts/Hebrew.ttf.");
+                Debug.LogWarning("[UITheme] No Hebrew-capable system font found (tried Segoe UI, Arial, Tahoma) — Hebrew text will render as boxes.");
                 hebrewFont = TMP_Settings.defaultFontAsset;
                 return hebrewFont;
             }
         }
 
-        private static TMP_FontAsset TryCreateProjectHebrewFont()
-        {
-            var projectFont = Resources.Load<Font>("Fonts/Hebrew");
-            return projectFont != null ? CreateFontAssetGenerous(projectFont) : null;
-        }
-
         /// <summary>
-        /// TMP_FontAsset.CreateFontAsset(Font) alone uses whatever bare defaults
-        /// that overload falls back to — for Hebrew specifically, the resulting
-        /// atlas padding was too tight for the font's natural glyph proportions,
-        /// so adjacent letters visually bled into each other ("swallowed" runs of
-        /// text) once a paragraph-length string forced denser packing. Building
-        /// with an explicit, generous padding and a proper SDF sampling size
-        /// fixes the glyphs themselves, not just their surrounding layout.
+        /// Builds HeaderFont's monospace display face with extra atlas padding
+        /// and sampling resolution — headers render large, so the bare default
+        /// overload's padding can look thin at that scale. Hebrew no longer
+        /// uses this; see HebrewFont for why a plain default build works better
+        /// for that font.
         /// </summary>
         private static TMP_FontAsset CreateFontAssetGenerous(Font sourceFont) =>
             TMP_FontAsset.CreateFontAsset(sourceFont, 180, 18, GlyphRenderMode.SDFAA, 2048, 2048);
