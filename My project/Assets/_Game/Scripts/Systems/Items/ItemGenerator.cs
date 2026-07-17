@@ -28,8 +28,14 @@ namespace PawnshopKing.Systems.Items
             return definitionsById.TryGetValue(definitionId, out var def) ? def : null;
         }
 
+        // A good name in town brings in better-heeled sellers — a soft value
+        // bias, not a hard gate, so reputation stays meaningful without
+        // overriding an item's own authored range.
+        private const float ReputationValuePerPoint = 0.005f;
+        private const float ReputationValueCap = 0.15f;
+
         /// <summary>Rolls the item(s) a visitor carries, filtered by the archetype's categories and skewed by its risk profile.</summary>
-        public static List<ItemInstance> GenerateItemsFor(CustomerArchetypeDefinition archetype)
+        public static List<ItemInstance> GenerateItemsFor(CustomerArchetypeDefinition archetype, int reputation = 0)
         {
             EnsureLoaded();
 
@@ -45,18 +51,20 @@ namespace PawnshopKing.Systems.Items
             for (int i = 0; i < count; i++)
             {
                 var definition = candidates[Random.Range(0, candidates.Count)];
-                items.Add(GenerateItem(definition, archetype.riskProfile));
+                items.Add(GenerateItem(definition, archetype.riskProfile, reputation));
             }
 
             return items;
         }
 
         /// <summary>Rolls one instance: value, condition, and the hidden fake/stolen truths (GDD 10.2, 10.3).</summary>
-        public static ItemInstance GenerateItem(ItemDefinition definition, CustomerRiskProfile risk = null)
+        public static ItemInstance GenerateItem(ItemDefinition definition, CustomerRiskProfile risk = null, int reputation = 0)
         {
             var item = ItemInstance.CreateNew(definition.id);
 
-            item.rolledBaseValue = Random.Range(definition.baseValueMin, definition.baseValueMax + 1);
+            float reputationBonus = Mathf.Clamp(reputation * ReputationValuePerPoint, -ReputationValueCap, ReputationValueCap);
+            item.rolledBaseValue = Mathf.RoundToInt(
+                Random.Range(definition.baseValueMin, definition.baseValueMax + 1) * (1f + reputationBonus));
 
             item.condition = definition.possibleConditions.Count > 0
                 ? definition.possibleConditions[Random.Range(0, definition.possibleConditions.Count)]

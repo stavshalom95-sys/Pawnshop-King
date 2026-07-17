@@ -13,7 +13,7 @@ namespace PawnshopKing.Systems.Customers
     /// </summary>
     public static class CustomerGenerator
     {
-        public static CustomerInstance Generate(CustomerArchetypeDefinition archetype)
+        public static CustomerInstance Generate(CustomerArchetypeDefinition archetype, int reputation = 0)
         {
             var customer = CustomerInstance.CreateNew(archetype.id);
 
@@ -24,7 +24,7 @@ namespace PawnshopKing.Systems.Customers
 
             customer.mood = RollStartingMood(customer);
             customer.customerType = (CustomerType)UnityEngine.Random.Range(0, 3);
-            customer.items.AddRange(ItemGenerator.GenerateItemsFor(archetype));
+            customer.items.AddRange(ItemGenerator.GenerateItemsFor(archetype, reputation));
             customer.askingPrice = NegotiationSystem.CalculateAskingPrice(customer);
 
             return customer;

@@ -75,7 +75,7 @@ namespace PawnshopKing.Core
             // Self-heal: an unwired (or hand-placed but empty) DayManager loads its own content.
             if (availableArchetypes.Count == 0) LoadArchetypes();
 
-            BuildCustomerQueue();
+            BuildCustomerQueue(state.reputation);
             DayStarted?.Invoke(state.currentDay);
         }
 
@@ -111,7 +111,7 @@ namespace PawnshopKing.Core
             DayEnded?.Invoke(state.currentDay);
         }
 
-        private void BuildCustomerQueue()
+        private void BuildCustomerQueue(int reputation)
         {
             customerQueue.Clear();
 
@@ -125,7 +125,7 @@ namespace PawnshopKing.Core
             for (int i = 0; i < count; i++)
             {
                 var archetype = availableArchetypes[UnityEngine.Random.Range(0, availableArchetypes.Count)];
-                customerQueue.Enqueue(CustomerGenerator.Generate(archetype));
+                customerQueue.Enqueue(CustomerGenerator.Generate(archetype, reputation));
             }
         }
     }
